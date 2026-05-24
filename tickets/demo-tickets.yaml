@@ -1,0 +1,130 @@
+# Silver Bullet — Bulletproof Tier 1 Support Demo Tickets
+# 10 realistic IT support scenarios for end-to-end testing
+
+tickets:
+  # --- Password/Account (3 tickets) ---
+  - id: BP-001
+    type: password_reset
+    subject: "Can't log in to my computer - password expired"
+    body: |
+      Hi, this is Sarah Chen from GamingCo International.
+      My password expired over the weekend and now I can't log in.
+      I'm at the main office. My username is schen@gamingco.com.
+      I tried the self-service reset but it's asking for MFA
+      and my phone is broken.
+    expected_routing: password-specialist
+    expected_outcome: "Provide temp access code via Azure AD admin reset, schedule MFA re-enrollment"
+
+  - id: BP-002
+    type: account_lockout
+    subject: "Account locked after too many attempts"
+    body: |
+      John Martinez at Maple Ridge Municipality here.
+      I'm locked out of my account. I think someone tried to
+      guess my password - I got 6 failed login emails overnight.
+      My username is j.martinez@mapleridge.ca. I need access
+      urgently for a council meeting at 10am.
+    expected_routing: password-specialist
+    expected_outcome: "Unlock via ADUC, recommend password change, flag suspicious activity"
+
+  - id: BP-003
+    type: mfa_issue
+    subject: "New phone, can't get MFA codes"
+    body: |
+      I'm Dr. Priya Sharma at Northern Health Network.
+      I got a new phone and now my Okta Verify isn't working.
+      I can't access the EMR system and I have patients in 20 min.
+      Employee ID: NH-4521. Please help ASAP.
+    expected_routing: password-specialist
+    expected_outcome: "Emergency bypass code via Okta, break-glass procedure, notify CISO"
+
+  # --- Connectivity/VPN (2 tickets) ---
+  - id: BP-004
+    type: vpn_error
+    subject: "VPN won't connect - error 443"
+    body: |
+      This is Mike Torres, remote analyst at Apex Financial Group.
+      Cisco AnyConnect keeps failing with "Connection attempt has failed
+      due to server communication error. Error 443." I was working fine
+      yesterday. Running Windows 11, AnyConnect 4.10.
+    expected_routing: connectivity-specialist
+    expected_outcome: "Troubleshoot DNS, check cert expiry, provide AnyConnect 443 resolution steps"
+
+  - id: BP-005
+    type: vpn_access
+    subject: "New employee needs VPN access"
+    body: |
+      Hi, I'm the office manager at TechStart Innovation.
+      We just hired a new developer, Alex Kim (akim@techstart.io).
+      They need WireGuard VPN access to our dev environment.
+      They're starting Monday and will be fully remote.
+    expected_routing: connectivity-specialist
+    expected_outcome: "Provide WireGuard client setup steps, note CTO must add peer on server"
+
+  # --- Software/Provisioning (2 tickets) ---
+  - id: BP-006
+    type: software_install
+    subject: "Need Adobe Creative Cloud installed"
+    body: |
+      Lisa Park from GamingCo International marketing department.
+      I need Adobe Creative Cloud installed on my workstation
+      for the new campaign assets. My machine is GC-MKT-042.
+      My manager already approved it.
+    expected_routing: software-specialist
+    expected_outcome: "Check approved list (yes), check license pool (38 available), approve and provide install steps"
+
+  - id: BP-007
+    type: software_denied
+    subject: "Can I install Dropbox?"
+    body: |
+      Hey, it's Carlos from GamingCo International accounting.
+      I want to install Dropbox to share files with our external
+      auditor. Is that possible?
+    expected_routing: software-specialist
+    expected_outcome: "DENY — personal cloud storage prohibited under GLI compliance. Suggest SharePoint External Sharing."
+
+  # --- Hardware (1 ticket) ---
+  - id: BP-008
+    type: hardware
+    subject: "Laptop screen flickering and freezing"
+    body: |
+      This is Dave Wilson at Pinnacle Properties, main office.
+      My laptop screen keeps flickering and the whole thing freezes
+      for 30 seconds at a time. It's a Dell Latitude 5540,
+      about 14 months old. Asset tag PP-LT-089.
+    expected_routing: general-support
+    expected_outcome: "Basic troubleshooting, check warranty (14mo likely in warranty), create dispatch ticket"
+
+  # --- Sentinel Security Alert (1 ticket) ---
+  - id: BP-009
+    type: sentinel_alert
+    subject: "SENTINEL: Suspicious login from unusual location"
+    body: |
+      SENTINEL ALERT
+      Severity: High
+      Title: Multiple failed login attempts followed by successful login from unusual location
+      Entities:
+        - User: j.martinez@mapleridge.ca
+        - IP: 203.0.113.42
+        - Location: Lagos, Nigeria
+      MITRE Tactic: InitialAccess
+      Client: Maple Ridge Municipality
+      Incident URL: https://portal.azure.com/incidents/INC-2026-0542
+      Description: User j.martinez@mapleridge.ca had 12 failed login attempts
+      from IP 203.0.113.42 (Lagos, Nigeria) followed by a successful login at 03:42 UTC.
+      User's normal location is Ontario, Canada. No travel request on file.
+    expected_routing: ESCALATION
+    expected_outcome: "Security incident — escalate immediately to SOC + Maple Ridge CISO"
+
+  # --- Escalation to Human (1 ticket) ---
+  - id: BP-010
+    type: escalation
+    subject: "URGENT: Email system down for entire organization"
+    body: |
+      This is Sandra Mitchell, CTO of Apex Financial Group.
+      Our entire email system has been down for 45 minutes.
+      Nobody in the company can send or receive email.
+      We have client communications and regulatory filings
+      that are time-sensitive. This needs to be fixed NOW.
+    expected_routing: ESCALATION
+    expected_outcome: "P1 severity, org-wide impact, CTO reporter — immediate human escalation"

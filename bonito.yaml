@@ -1,0 +1,200 @@
+# ============================================================
+# Silver Bullet — Bulletproof Tier 1 Support Demo
+# ============================================================
+# Multi-agent IT support triage system for Bulletproof MSP.
+# Deploy with: bonito deploy -f bonito.yaml
+#
+# Architecture:
+#   Incoming ticket → Triage Router → invoke_agent(Specialist)
+#   Specialists search KBs for procedures → resolve or escalate
+#   All interactions visible in Breadcrumbs
+# ============================================================
+
+version: "1"
+name: silver-bullet
+description: Bulletproof Tier 1 Support Automation — Multi-agent triage with KB-driven resolution
+
+# ── Gateway Configuration ────────────────────────────────────
+gateway:
+  providers:
+    - name: openai
+      type: managed
+      priority: 1
+      models: [gpt-4o-mini, gpt-4o]
+
+    - name: anthropic
+      type: managed
+      priority: 2
+      models: [claude-sonnet-4-20250514]
+
+  routing:
+    strategy: cost-optimized
+    fallback: true
+    retry_attempts: 2
+    timeout_ms: 30000
+
+# ── Knowledge Bases ──────────────────────────────────────────
+knowledge_bases:
+  client-directory:
+    name: Client Directory
+    description: 6 mock clients with environments, policies, and contacts
+    documents:
+      - ./knowledge-bases/client-directory.md
+
+  password-procedures:
+    name: Password Procedures
+    description: Per-IdP password reset, MFA, and account unlock procedures
+    documents:
+      - ./knowledge-bases/password-procedures.md
+
+  vpn-procedures:
+    name: VPN Procedures
+    description: Error-code indexed VPN troubleshooting trees
+    documents:
+      - ./knowledge-bases/vpn-procedures.md
+
+  approved-software:
+    name: Approved Software
+    description: Per-client approved and prohibited software lists
+    documents:
+      - ./knowledge-bases/approved-software.md
+
+  escalation-matrix:
+    name: Escalation Matrix
+    description: Severity definitions, escalation contacts, always-escalate rules
+    documents:
+      - ./knowledge-bases/escalation-matrix.md
+
+# ── Agents ───────────────────────────────────────────────────
+agents:
+  # ── Triage Router (front door) ─────────────────────────────
+  triage-router:
+    type: bonobot
+    display_name: Triage Router
+    description: Classifies incoming support tickets and delegates to specialist agents
+    system_prompt: ./agents/triage-router/system-prompt.md
+
+    model:
+      primary: gpt-4o-mini
+      fallback: claude-sonnet-4-20250514
+    parameters:
+      temperature: 0.1
+      max_tokens: 2048
+
+    knowledge_bases:
+      - client-directory
+      - escalation-matrix
+
+    tool_policy:
+      mode: allowlist
+      allowed: [invoke_agent, search_knowledge_base]
+
+    delegates:
+      - agent: password-specialist
+        connection_type: handoff
+        domains: [password-reset, mfa, account-lockout, azure-ad, okta, active-directory]
+      - agent: connectivity-specialist
+        connection_type: handoff
+        domains: [vpn, network, remote-access, connectivity, anyconnect, globalprotect, zscaler, wireguard]
+      - agent: software-specialist
+        connection_type: handoff
+        domains: [software-install, license, provisioning, approved-software, application-access]
+      - agent: general-support
+        connection_type: handoff
+        domains: [hardware, how-to, printer, catch-all, dispatch]
+
+  # ── Password & Account Specialist ─────────────────────────
+  password-specialist:
+    type: bonbon
+    mode: advanced
+    display_name: Password & Account Specialist
+    description: Handles password resets, MFA issues, account lockouts across identity providers
+    system_prompt: ./agents/password-specialist/system-prompt.md
+
+    model:
+      primary: gpt-4o-mini
+    parameters:
+      temperature: 0.2
+      max_tokens: 4096
+
+    knowledge_bases:
+      - password-procedures
+      - client-directory
+
+    tool_policy:
+      mode: allowlist
+      allowed: [search_knowledge_base, http_request]
+      http_allowlist:
+        - "http://localhost:8090/*"
+
+  # ── Connectivity & VPN Specialist ──────────────────────────
+  connectivity-specialist:
+    type: bonbon
+    mode: advanced
+    display_name: Connectivity & VPN Specialist
+    description: Troubleshoots VPN, network, and remote access issues
+    system_prompt: ./agents/connectivity-specialist/system-prompt.md
+
+    model:
+      primary: gpt-4o-mini
+    parameters:
+      temperature: 0.2
+      max_tokens: 4096
+
+    knowledge_bases:
+      - vpn-procedures
+      - client-directory
+
+    tool_policy:
+      mode: allowlist
+      allowed: [search_knowledge_base, http_request]
+      http_allowlist:
+        - "http://localhost:8090/*"
+
+  # ── Software & Provisioning Specialist ─────────────────────
+  software-specialist:
+    type: bonbon
+    mode: advanced
+    display_name: Software & Provisioning Specialist
+    description: Handles software install requests, license checks, and provisioning
+    system_prompt: ./agents/software-specialist/system-prompt.md
+
+    model:
+      primary: gpt-4o-mini
+    parameters:
+      temperature: 0.2
+      max_tokens: 4096
+
+    knowledge_bases:
+      - approved-software
+      - client-directory
+
+    tool_policy:
+      mode: allowlist
+      allowed: [search_knowledge_base, http_request]
+      http_allowlist:
+        - "http://localhost:8090/*"
+
+  # ── General Support ────────────────────────────────────────
+  general-support:
+    type: bonbon
+    mode: advanced
+    display_name: General Support
+    description: Hardware issues, how-to questions, printer problems, catch-all
+    system_prompt: ./agents/general-support/system-prompt.md
+
+    model:
+      primary: gpt-4o-mini
+    parameters:
+      temperature: 0.3
+      max_tokens: 4096
+
+    knowledge_bases:
+      - client-directory
+      - escalation-matrix
+
+    tool_policy:
+      mode: allowlist
+      allowed: [search_knowledge_base, http_request]
+      http_allowlist:
+        - "http://localhost:8090/*"
