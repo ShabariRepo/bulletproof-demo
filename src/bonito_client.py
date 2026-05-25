@@ -156,7 +156,12 @@ class BonitoClient:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{self.base_url}/api/knowledge-bases",
-                json={"name": name, "description": description},
+                json={
+                    "name": name,
+                    "description": description,
+                    "source_type": "upload",
+                    "embedding_model": "auto",
+                },
                 headers=headers,
             )
             resp.raise_for_status()
@@ -174,6 +179,30 @@ class BonitoClient:
                     files={"file": (path.name, f, "text/markdown")},
                     headers=headers,
                 )
+            resp.raise_for_status()
+            return resp.json()
+
+    # ------------------------------------------------------------------
+    # Project Management
+    # ------------------------------------------------------------------
+
+    async def list_projects(self) -> list[dict]:
+        """List all projects in the org."""
+        headers = await self._headers()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.get(f"{self.base_url}/api/projects", headers=headers)
+            resp.raise_for_status()
+            return resp.json()
+
+    async def create_project(self, name: str, description: str = "") -> dict:
+        """Create a new project."""
+        headers = await self._headers()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f"{self.base_url}/api/projects",
+                json={"name": name, "description": description},
+                headers=headers,
+            )
             resp.raise_for_status()
             return resp.json()
 
@@ -198,6 +227,18 @@ class BonitoClient:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{self.base_url}/api/projects/{project_id}/agents",
+                json=agent_data,
+                headers=headers,
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def update_agent(self, agent_id: str, agent_data: dict) -> dict:
+        """Update an existing agent."""
+        headers = await self._headers()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.patch(
+                f"{self.base_url}/api/agents/{agent_id}",
                 json=agent_data,
                 headers=headers,
             )

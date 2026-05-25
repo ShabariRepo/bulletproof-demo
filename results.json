@@ -1,0 +1,20 @@
+[
+  {
+    "ticket_id": "BP-004",
+    "ticket_type": "vpn_error",
+    "subject": "VPN won't connect - error 443",
+    "expected_routing": "connectivity-specialist",
+    "actual_routing": "ERROR",
+    "routing_correct": false,
+    "severity": "?",
+    "confidence": 0,
+    "classification": "error",
+    "response": "Server error '500 Internal Server Error' for url 'https://api.getbonito.com/api/agents/98c6d000-6bc1-4346-b10e-cf5b190cfd34/execute'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+    "parsed": {},
+    "model_used": "none",
+    "tokens": 0,
+    "cost": 0,
+    "session_id": null,
+    "elapsed_seconds": 0
+  }
+]

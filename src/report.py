@@ -49,7 +49,7 @@ def print_report(results: list[dict[str, Any]]) -> None:
         elapsed = r.get("elapsed_seconds", 0)
         total_time += elapsed
         total_tokens += r.get("tokens", 0)
-        total_cost += r.get("cost", 0)
+        total_cost += float(r.get("cost", 0) or 0)
 
         table.add_row(
             r["ticket_id"],

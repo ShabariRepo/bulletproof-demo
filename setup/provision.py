@@ -109,14 +109,32 @@ CONNECTIONS = [
 
 async def main():
     load_dotenv()
-    project_id = os.getenv("PROJECT_ID", "")
-    if not project_id:
-        console.print("[red]PROJECT_ID not set in .env[/]")
-        sys.exit(1)
 
     client = BonitoClient()
 
     console.print("[bold cyan]Silver Bullet — Provisioning on Bonito Prod[/]\n")
+
+    # ── Step 0: Find or create project ──
+    project_id = os.getenv("PROJECT_ID", "")
+    if not project_id:
+        console.print("[bold]Step 0: Finding/Creating Project[/]")
+        projects = await client.list_projects()
+        existing = next((p for p in projects if p["name"] == "Silver Bullet"), None)
+        if existing:
+            project_id = existing["id"]
+            console.print(f"  [dim]Project 'Silver Bullet' already exists: {project_id}[/]")
+        else:
+            project = await client.create_project("Silver Bullet", "Bulletproof Tier 1 Support Demo")
+            project_id = project["id"]
+            console.print(f"  [green]Created project 'Silver Bullet': {project_id}[/]")
+        # Write to .env
+        env_path = BASE_DIR / ".env"
+        if env_path.exists():
+            import re
+            content = env_path.read_text()
+            content = re.sub(r"^PROJECT_ID=.*$", f"PROJECT_ID={project_id}", content, flags=re.MULTILINE)
+            env_path.write_text(content)
+        console.print()
 
     # ── Step 1: Create Knowledge Bases ──
     console.print("[bold]Step 1: Knowledge Bases[/]")

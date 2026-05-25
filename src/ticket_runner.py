@@ -53,22 +53,27 @@ async def run_ticket(
 
     # Determine actual routing from the response
     actual_routing = "unknown"
+    classification_map = {
+        "password_account": "password-specialist",
+        "connectivity_vpn": "connectivity-specialist",
+        "software_provisioning": "software-specialist",
+        "hardware_general": "general-support",
+    }
     if parsed:
         action = parsed.get("action", "")
         specialist = parsed.get("specialist", "")
-        if action == "escalate":
+        specialist_response = parsed.get("specialist_response")
+        classification = parsed.get("classification", "")
+
+        # If there's a specialist_response, delegation happened regardless of action label
+        if specialist_response and specialist_response not in ("null", "None", ""):
+            actual_routing = classification_map.get(classification, specialist or classification)
+        elif action == "escalate":
             actual_routing = "ESCALATION"
-        elif specialist:
+        elif specialist and specialist not in ("null", "None"):
             actual_routing = specialist
         elif action == "delegate":
-            classification = parsed.get("classification", "")
-            routing_map = {
-                "password_account": "password-specialist",
-                "connectivity_vpn": "connectivity-specialist",
-                "software_provisioning": "software-specialist",
-                "hardware_general": "general-support",
-            }
-            actual_routing = routing_map.get(classification, classification)
+            actual_routing = classification_map.get(classification, classification)
 
     return {
         "ticket_id": ticket["id"],
