@@ -57,6 +57,7 @@ KB_DEFS = {
 
 # Agent definitions: key -> (display_name, prompt_path, model, kb_keys, tool_policy)
 AGENT_DEFS = {
+    # Router: gpt-4o-mini — fast classification, cheap, proven 10/10 routing
     "triage-router": (
         "Triage Router",
         "agents/triage-router/system-prompt.md",
@@ -64,34 +65,39 @@ AGENT_DEFS = {
         ["client-directory", "escalation-matrix"],
         {"mode": "allowlist", "allowed": ["invoke_agent", "search_knowledge_base"]},
     ),
+    # Password: Claude Sonnet — handles compliance (PHIPA, GLI), break-glass,
+    # security-adjacent decisions that need stronger reasoning
     "password-specialist": (
         "Password & Account Specialist",
         "agents/password-specialist/system-prompt.md",
-        "gpt-4o-mini",
+        "claude-sonnet-4-6-20250620",
         ["password-procedures", "client-directory"],
         {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
          "http_allowlist": ["http://localhost:8090/*"]},
     ),
+    # Connectivity: Groq Llama — VPN troubleshooting is procedural, speed wins
     "connectivity-specialist": (
         "Connectivity & VPN Specialist",
         "agents/connectivity-specialist/system-prompt.md",
-        "gpt-4o-mini",
+        "llama-3.3-70b-versatile",
         ["vpn-procedures", "client-directory"],
         {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
          "http_allowlist": ["http://localhost:8090/*"]},
     ),
+    # Software: Groq Llama — approve/deny is straightforward, fast turnaround
     "software-specialist": (
         "Software & Provisioning Specialist",
         "agents/software-specialist/system-prompt.md",
-        "gpt-4o-mini",
+        "llama-3.3-70b-versatile",
         ["approved-software", "client-directory"],
         {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
          "http_allowlist": ["http://localhost:8090/*"]},
     ),
+    # General: Groq Llama — hardware triage is simple, speed matters
     "general-support": (
         "General Support",
         "agents/general-support/system-prompt.md",
-        "gpt-4o-mini",
+        "llama-3.3-70b-versatile",
         ["client-directory", "escalation-matrix"],
         {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
          "http_allowlist": ["http://localhost:8090/*"]},

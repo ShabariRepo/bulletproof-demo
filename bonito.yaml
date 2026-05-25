@@ -25,7 +25,12 @@ gateway:
     - name: anthropic
       type: managed
       priority: 2
-      models: [claude-sonnet-4-20250514]
+      models: [claude-sonnet-4-6-20250620]
+
+    - name: groq
+      type: managed
+      priority: 3
+      models: [llama-3.3-70b-versatile]
 
   routing:
     strategy: cost-optimized
@@ -76,7 +81,7 @@ agents:
 
     model:
       primary: gpt-4o-mini
-      fallback: claude-sonnet-4-20250514
+      fallback: claude-sonnet-4-6-20250620
     parameters:
       temperature: 0.1
       max_tokens: 2048
@@ -104,6 +109,7 @@ agents:
         domains: [hardware, how-to, printer, catch-all, dispatch]
 
   # ── Password & Account Specialist ─────────────────────────
+  # Claude Sonnet — compliance-heavy (PHIPA, GLI), break-glass, needs reasoning
   password-specialist:
     type: bonbon
     mode: advanced
@@ -112,7 +118,8 @@ agents:
     system_prompt: ./agents/password-specialist/system-prompt.md
 
     model:
-      primary: gpt-4o-mini
+      primary: claude-sonnet-4-6-20250620
+      fallback: gpt-4o
     parameters:
       temperature: 0.2
       max_tokens: 4096
@@ -128,6 +135,7 @@ agents:
         - "http://localhost:8090/*"
 
   # ── Connectivity & VPN Specialist ──────────────────────────
+  # Groq Llama — procedural VPN troubleshooting, speed > reasoning depth
   connectivity-specialist:
     type: bonbon
     mode: advanced
@@ -136,7 +144,8 @@ agents:
     system_prompt: ./agents/connectivity-specialist/system-prompt.md
 
     model:
-      primary: gpt-4o-mini
+      primary: llama-3.3-70b-versatile
+      fallback: gpt-4o-mini
     parameters:
       temperature: 0.2
       max_tokens: 4096
@@ -152,6 +161,7 @@ agents:
         - "http://localhost:8090/*"
 
   # ── Software & Provisioning Specialist ─────────────────────
+  # Groq Llama — approve/deny is straightforward, fast turnaround
   software-specialist:
     type: bonbon
     mode: advanced
@@ -160,7 +170,8 @@ agents:
     system_prompt: ./agents/software-specialist/system-prompt.md
 
     model:
-      primary: gpt-4o-mini
+      primary: llama-3.3-70b-versatile
+      fallback: gpt-4o-mini
     parameters:
       temperature: 0.2
       max_tokens: 4096
@@ -176,6 +187,7 @@ agents:
         - "http://localhost:8090/*"
 
   # ── General Support ────────────────────────────────────────
+  # Groq Llama — hardware triage is simple, speed matters
   general-support:
     type: bonbon
     mode: advanced
@@ -184,7 +196,8 @@ agents:
     system_prompt: ./agents/general-support/system-prompt.md
 
     model:
-      primary: gpt-4o-mini
+      primary: llama-3.3-70b-versatile
+      fallback: gpt-4o-mini
     parameters:
       temperature: 0.3
       max_tokens: 4096
