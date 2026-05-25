@@ -70,7 +70,7 @@ AGENT_DEFS = {
     "password-specialist": (
         "Password & Account Specialist",
         "agents/password-specialist/system-prompt.md",
-        "claude-sonnet-4-6-20250620",
+        "anthropic.claude-sonnet-4-6",
         ["password-procedures", "client-directory"],
         {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
          "http_allowlist": ["http://localhost:8090/*"]},
