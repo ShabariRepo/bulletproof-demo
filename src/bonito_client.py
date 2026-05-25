@@ -167,6 +167,16 @@ class BonitoClient:
             resp.raise_for_status()
             return resp.json()
 
+    async def delete_knowledge_base(self, kb_id: str) -> None:
+        """Delete a knowledge base and all its documents/chunks."""
+        headers = await self._headers()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.delete(
+                f"{self.base_url}/api/knowledge-bases/{kb_id}",
+                headers=headers,
+            )
+            resp.raise_for_status()
+
     async def upload_document(self, kb_id: str, filepath: str) -> dict:
         """Upload a document to a knowledge base."""
         headers = await self._headers()
@@ -181,6 +191,27 @@ class BonitoClient:
                 )
             resp.raise_for_status()
             return resp.json()
+
+    async def list_documents(self, kb_id: str) -> list[dict]:
+        """List all documents in a knowledge base."""
+        headers = await self._headers()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.get(
+                f"{self.base_url}/api/knowledge-bases/{kb_id}/documents",
+                headers=headers,
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def delete_document(self, kb_id: str, doc_id: str) -> None:
+        """Delete a document from a knowledge base."""
+        headers = await self._headers()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.delete(
+                f"{self.base_url}/api/knowledge-bases/{kb_id}/documents/{doc_id}",
+                headers=headers,
+            )
+            resp.raise_for_status()
 
     # ------------------------------------------------------------------
     # Project Management

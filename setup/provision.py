@@ -65,12 +65,12 @@ AGENT_DEFS = {
         ["client-directory", "escalation-matrix"],
         {"mode": "allowlist", "allowed": ["invoke_agent", "search_knowledge_base"]},
     ),
-    # Password: Claude Sonnet — handles compliance (PHIPA, GLI), break-glass,
-    # security-adjacent decisions that need stronger reasoning
+    # Password: gpt-4o-mini — KB-driven resolution is procedural, speed wins
+    # for demo. Sonnet via Bedrock adds too much latency.
     "password-specialist": (
         "Password & Account Specialist",
         "agents/password-specialist/system-prompt.md",
-        "anthropic.claude-sonnet-4-6",
+        "gpt-4o-mini",
         ["password-procedures", "client-directory"],
         {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
          "http_allowlist": ["http://localhost:8090/*"]},
