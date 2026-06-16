@@ -10,8 +10,6 @@ import {
   Check,
   CheckCircle2,
   CircleDashed,
-  Coins,
-  Cpu,
   FileCheck2,
   Gauge,
   Inbox,
@@ -90,16 +88,6 @@ const SSE_TO_STAGE: Record<string, StageKey> = {
 };
 
 const STAGE_ORDER = STAGES.map((s) => s.key);
-
-function fmtCost(value?: number) {
-  if (typeof value !== "number") return "$0.0000";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4
-  }).format(value);
-}
 
 function humanize(value: string) {
   return value.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -523,10 +511,13 @@ export function LiveSimulation({ recentCount }: { recentCount: number }) {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <Stat icon={Cpu} label="Model" value={data.model ?? "—"} />
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  <Stat
+                    icon={Gauge}
+                    label="Confidence"
+                    value={typeof data.confidence === "number" ? `${data.confidence}%` : "—"}
+                  />
                   <Stat icon={Sparkles} label="Tokens" value={(data.tokens ?? 0).toLocaleString()} />
-                  <Stat icon={Coins} label="Cost" value={fmtCost(data.cost)} />
                   <Stat icon={Timer} label="Elapsed" value={`${(data.elapsedSeconds ?? 0).toFixed(1)}s`} />
                 </div>
 
@@ -588,7 +579,7 @@ function ConfidenceChip({ confidence }: { confidence: number }) {
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof Cpu; label: string; value: string }) {
+function Stat({ icon: Icon, label, value }: { icon: typeof Gauge; label: string; value: string }) {
   return (
     <div className="rounded-md border border-border bg-zinc-950 p-3">
       <div className="flex items-center gap-1.5 text-xs text-zinc-500">

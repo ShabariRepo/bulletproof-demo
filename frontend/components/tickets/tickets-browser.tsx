@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import type { ModalRun, RunSource } from "@/components/tickets/ticket-modal";
 import type { TicketRow } from "@/lib/run-rows";
 
@@ -178,7 +178,6 @@ export function TicketsBrowser({ rows }: { rows: TicketRow[] }) {
               <TableHead className="hidden md:table-cell">Category</TableHead>
               <TableHead className="hidden lg:table-cell">Routing</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden sm:table-cell">Cost</TableHead>
               <TableHead className="hidden sm:table-cell">Date</TableHead>
             </TableRow>
           </TableHeader>
@@ -214,7 +213,6 @@ export function TicketsBrowser({ rows }: { rows: TicketRow[] }) {
                   <TableCell>
                     <StatusBadge status={row.status} />
                   </TableCell>
-                  <TableCell className="hidden text-zinc-400 sm:table-cell">{formatCurrency(row.cost)}</TableCell>
                   <TableCell className="hidden text-zinc-500 sm:table-cell">
                     {row.dateISO ? formatDate(row.dateISO) : "—"}
                   </TableCell>
@@ -223,7 +221,7 @@ export function TicketsBrowser({ rows }: { rows: TicketRow[] }) {
             })}
             {visible.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-zinc-500">
+                <TableCell colSpan={6} className="py-10 text-center text-sm text-zinc-500">
                   No tickets match the current filters.
                 </TableCell>
               </TableRow>

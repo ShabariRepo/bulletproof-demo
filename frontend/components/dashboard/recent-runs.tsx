@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/tickets/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { liveRunToModal } from "@/lib/run-rows";
-import { formatCurrency, formatDateTime, formatSeconds } from "@/lib/format";
+import { formatDateTime, formatSeconds } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { LiveRun } from "@/lib/live-runs";
 
@@ -55,7 +55,6 @@ export function RecentRuns({ runs }: { runs: LiveRun[] }) {
             {run.triageCorrect && run.resolved ? "Pass" : "Review"}
           </TableCell>
           <TableCell className="hidden text-zinc-400 sm:table-cell">{formatSeconds(run.elapsedSeconds)}</TableCell>
-          <TableCell className="hidden text-zinc-400 sm:table-cell">{formatCurrency(run.cost)}</TableCell>
         </TableRow>
       ))}
 

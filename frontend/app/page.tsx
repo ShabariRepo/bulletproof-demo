@@ -5,8 +5,8 @@ import { RecentRuns } from "@/components/dashboard/recent-runs";
 import { StatusBadge } from "@/components/tickets/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatSeconds, getDashboardMetrics, getTicketViews } from "@/lib/demo-data";
-import { readLiveRuns } from "@/lib/live-runs";
+import { formatSeconds, getDashboardMetrics, getTicketViews } from "@/lib/demo-data";
+import { localDateKey, readLiveRuns } from "@/lib/live-runs";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +48,49 @@ export default function DashboardPage() {
   const avgSecs = totalN ? (metrics.avgHandleSeconds * canonN + live.secs) / totalN : 0;
   const laborHoursSaved = Math.round((autoResolved * HUMAN_MIN_PER_TICKET) / 60);
 
+  // --- Time-series for the value/ROI charts -------------------------------
+  // A human-only desk would pay this per Tier-1 ticket; we only count savings on
+  // AUTO-RESOLVED tickets (resolved AND not escalated) — escalations still
+  // needed a human, so they save no labor (consistent with "Est. labor saved").
+  const HUMAN_COST_PER_TICKET = 7;
+
+  // Per-day aggregates from the stored runs (canonical 10 carry no timestamp).
+  type DayAgg = { date: string; count: number; autoResolved: number; secs: number };
+  const dayMap = new Map<string, DayAgg>();
+  for (const r of allLiveRuns) {
+    if (!r.timestamp) continue;
+    const key = localDateKey(r.timestamp);
+    const agg = dayMap.get(key) ?? { date: key, count: 0, autoResolved: 0, secs: 0 };
+    agg.count += 1;
+    if (r.resolved && !ESCALATED(r.routing)) agg.autoResolved += 1;
+    agg.secs += Number(r.elapsedSeconds) || 0;
+    dayMap.set(key, agg);
+  }
+  const sortedDays = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+
+  // Fold the canonical (timestamp-less) tickets into the earliest day so they
+  // count in the totals without inventing a date for the time-series.
+  if (sortedDays.length > 0) {
+    sortedDays[0].count += canonN;
+    sortedDays[0].autoResolved += canonAutoResolved;
+  }
+
+  // b. Cost saved — cumulative auto-resolved × $7 over the timeline.
+  let running = 0;
+  const costSavedByDay = sortedDays.map((d) => {
+    running += d.autoResolved * HUMAN_COST_PER_TICKET;
+    return { date: d.date, cumulative: running };
+  });
+
+  // c. Resolution time — average latency (seconds) per day.
+  const resolutionByDay = sortedDays.map((d) => ({
+    date: d.date,
+    avgSeconds: d.count ? d.secs / d.count : 0
+  }));
+
+  // d. Tickets handled per day (last ~30 days).
+  const ticketsByDay = sortedDays.slice(-30).map((d) => ({ date: d.date, count: d.count }));
+
   const kpis = [
     { label: "Tickets handled", value: totalN.toLocaleString(), icon: Ticket },
     { label: "Auto-resolution rate", value: `${autoResolvedPct}%`, icon: CheckCircle2 },
@@ -83,7 +126,12 @@ export default function DashboardPage() {
         ))}
       </section>
 
-      <DashboardCharts categoryCounts={metrics.categoryCounts} costOverTime={metrics.costOverTime} />
+      <DashboardCharts
+        categoryCounts={metrics.categoryCounts}
+        costSavedByDay={costSavedByDay}
+        resolutionByDay={resolutionByDay}
+        ticketsByDay={ticketsByDay}
+      />
 
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
@@ -110,7 +158,6 @@ export default function DashboardPage() {
                 <TableHead>Status</TableHead>
                 <TableHead className="hidden lg:table-cell">Quality</TableHead>
                 <TableHead className="hidden sm:table-cell">Latency</TableHead>
-                <TableHead className="hidden sm:table-cell">Cost</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -131,7 +178,6 @@ export default function DashboardPage() {
                     {view.result?.resolution_quality_correct ? "Pass" : "Review"}
                   </TableCell>
                   <TableCell className="hidden text-zinc-400 sm:table-cell">{formatSeconds(view.latencySeconds)}</TableCell>
-                  <TableCell className="hidden text-zinc-400 sm:table-cell">{formatCurrency(view.cost)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

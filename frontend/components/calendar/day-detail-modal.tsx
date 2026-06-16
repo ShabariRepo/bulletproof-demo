@@ -8,7 +8,7 @@ import { TicketModal } from "@/components/tickets/ticket-modal";
 import { Badge } from "@/components/ui/badge";
 import { DialogContent, DialogHeader, DialogOverlay, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency, formatSeconds, formatTime } from "@/lib/format";
+import { formatSeconds, formatTime } from "@/lib/format";
 import { liveRunToModal, sourceFromRunId } from "@/lib/run-rows";
 import type { ModalRun, RunSource } from "@/components/tickets/ticket-modal";
 import type { LiveRun } from "@/lib/live-runs";
@@ -157,7 +157,7 @@ export function DayDetailModal({
             <p className="py-8 text-center text-sm text-zinc-500">No tickets on this day.</p>
           ) : (
             <div className="max-h-[60vh] overflow-x-auto overflow-y-auto">
-              <table className="w-full min-w-[760px] border-collapse text-left text-xs">
+              <table className="w-full min-w-[640px] border-collapse text-left text-xs">
                 <thead className="sticky top-0 z-10 bg-card">
                   <tr className="border-b border-border text-[10px] uppercase tracking-wide text-zinc-500">
                     <th className="px-2 py-2 font-medium">Time</th>
@@ -168,9 +168,7 @@ export function DayDetailModal({
                     <th className="px-2 py-2 font-medium">Sev / Conf</th>
                     <th className="px-2 py-2 font-medium">Routing</th>
                     <th className="px-2 py-2 font-medium">Status</th>
-                    <th className="px-2 py-2 font-medium">Model</th>
                     <th className="px-2 py-2 text-right font-medium">Tokens</th>
-                    <th className="px-2 py-2 text-right font-medium">Cost</th>
                     <th className="px-2 py-2 text-right font-medium">Elapsed</th>
                   </tr>
                 </thead>
@@ -227,14 +225,8 @@ export function DayDetailModal({
                         <td className="px-2 py-2">
                           <StatusBadge status={status} />
                         </td>
-                        <td className="whitespace-nowrap px-2 py-2 font-mono text-[10px] text-zinc-400">
-                          {run.model || "—"}
-                        </td>
                         <td className="whitespace-nowrap px-2 py-2 text-right tabular-nums text-zinc-400">
                           {run.tokens ? run.tokens.toLocaleString() : "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-right tabular-nums text-zinc-300">
-                          {formatCurrency(Number(run.cost) || 0)}
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-right tabular-nums text-zinc-400">
                           {formatSeconds(Number(run.elapsedSeconds) || 0)}

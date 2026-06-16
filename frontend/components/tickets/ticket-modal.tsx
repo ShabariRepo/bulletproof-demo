@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/tickets/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { DialogContent, DialogHeader, DialogOverlay, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency, formatDateTime, formatSeconds } from "@/lib/format";
+import { formatDateTime, formatSeconds } from "@/lib/format";
 import type { TicketStatus } from "@/types/demo";
 
 const specialistDisplay: Record<string, string> = {
@@ -149,12 +149,8 @@ export function TicketModal({ run, onClose }: { run: ModalRun | null; onClose: (
           <Field label="Resolved">
             {run.resolved ? <span className="text-emerald-300">Yes</span> : <span className="text-amber-300">No</span>}
           </Field>
-          <Field label="Model">
-            <span className="font-mono text-xs">{run.model || "—"}</span>
-          </Field>
-
           <Field label="Tokens">{run.tokens ? run.tokens.toLocaleString() : "—"}</Field>
-          <Field label="Cost">{formatCurrency(run.cost)}</Field>
+
           <Field label="Elapsed">{formatSeconds(run.elapsedSeconds)}</Field>
         </div>
 
