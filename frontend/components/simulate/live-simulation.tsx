@@ -355,9 +355,15 @@ export function LiveSimulation({ recentCount }: { recentCount: number }) {
                     <span
                       className={cn(
                         "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors duration-300",
+                        // Pending: dim ring.
                         state === "pending" && "border-border bg-zinc-950 text-zinc-600",
-                        state === "active" && "sim-pulse-ring border-primary bg-primary/15 text-primary",
-                        state === "done" && "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
+                        // Active: strong accent border + tinted fill + ring glow — all STATIC,
+                        // so the state is fully visible even when prefers-reduced-motion strips
+                        // the pulse animation (common on phones). The pulse (sim-pulse-ring) is a
+                        // purely additive flourish layered on top of these base styles.
+                        state === "active" &&
+                          "sim-pulse-ring border-primary bg-primary/25 text-primary ring-2 ring-primary/40",
+                        state === "done" && "border-emerald-500/60 bg-emerald-500/20 text-emerald-300"
                       )}
                       aria-live={state === "active" ? "polite" : undefined}
                     >
