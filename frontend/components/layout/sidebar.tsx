@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function Sidebar({ className }: { className?: string }) {
   return (
-    <aside className={cn("hidden min-h-screen w-72 border-r border-border bg-background px-5 py-6 lg:block", className)}>
+    <aside className={cn("hidden w-72 shrink-0 self-start sticky top-0 h-screen overflow-y-auto border-r border-border bg-background px-5 py-6 lg:block", className)}>
       <SidebarInner />
     </aside>
   );
