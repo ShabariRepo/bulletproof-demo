@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Clock, Coins, Gauge, Ticket } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, Ticket, Timer, UserRound, Zap } from "lucide-react";
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { RecentRuns } from "@/components/dashboard/recent-runs";
 import { StatusBadge } from "@/components/tickets/status-badge";
@@ -18,36 +18,41 @@ export default function DashboardPage() {
   const RECENT_LIMIT = 15;
   const liveRuns = allLiveRuns.slice(-RECENT_LIMIT).reverse();
 
-  // KPIs span the FULL handled history — the canonical demo tickets plus every
-  // stored run (live, burst, seeded). Recover the canonical counts from the
-  // aggregated percentages (exact for the 10-ticket set) and fold in the store
-  // so the cards stay consistent with the queue + calendar.
+  // Buyer-facing KPIs lead with VALUE, not an accuracy score — across the full
+  // handled history (canonical demo tickets + every stored run). "Auto-resolved"
+  // = handled without a human (not escalated); escalations are the ones we
+  // correctly hand to a person. Labor saved assumes ~8 min human handle per
+  // Tier-1 ticket (industry AHT) for the tickets the AI deflected.
+  const ESCALATED = (routing: string) => (routing || "").toUpperCase() === "ESCALATION";
+  const HUMAN_MIN_PER_TICKET = 8;
+
   const canonN = metrics.totalTickets;
-  const canonTriage = Math.round((metrics.triageCorrectPct / 100) * canonN);
-  const canonResolved = Math.round((metrics.resolutionQualityPct / 100) * canonN);
+  const canonEscalations = tickets.filter((v) => v.status === "escalated").length;
+  const canonAutoResolved = tickets.filter((v) => v.status === "resolved").length;
+
   const live = allLiveRuns.reduce(
     (a, r) => ({
       n: a.n + 1,
-      triage: a.triage + (r.triageCorrect ? 1 : 0),
-      resolved: a.resolved + (r.resolved ? 1 : 0),
-      secs: a.secs + (Number(r.elapsedSeconds) || 0),
-      cost: a.cost + (Number(r.cost) || 0)
+      escalations: a.escalations + (ESCALATED(r.routing) ? 1 : 0),
+      autoResolved: a.autoResolved + (r.resolved && !ESCALATED(r.routing) ? 1 : 0),
+      secs: a.secs + (Number(r.elapsedSeconds) || 0)
     }),
-    { n: 0, triage: 0, resolved: 0, secs: 0, cost: 0 }
+    { n: 0, escalations: 0, autoResolved: 0, secs: 0 }
   );
+
   const totalN = canonN + live.n;
-  const pct = (num: number) => (totalN ? Math.round((num / totalN) * 100) : 0);
-  const triagePct = pct(canonTriage + live.triage);
-  const resolutionPct = pct(canonResolved + live.resolved);
+  const escalations = canonEscalations + live.escalations;
+  const autoResolved = canonAutoResolved + live.autoResolved;
+  const autoResolvedPct = totalN ? Math.round((autoResolved / totalN) * 100) : 0;
   const avgSecs = totalN ? (metrics.avgHandleSeconds * canonN + live.secs) / totalN : 0;
-  const totalCost = metrics.totalCost + live.cost;
+  const laborHoursSaved = Math.round((autoResolved * HUMAN_MIN_PER_TICKET) / 60);
 
   const kpis = [
-    { label: "Total tickets", value: totalN.toLocaleString(), icon: Ticket },
-    { label: "Triage correctness", value: `${triagePct}%`, icon: Gauge },
-    { label: "Resolution quality", value: `${resolutionPct}%`, icon: Gauge },
-    { label: "Avg handle time", value: formatSeconds(avgSecs), icon: Clock },
-    { label: "Total cost", value: formatCurrency(totalCost), icon: Coins }
+    { label: "Tickets handled", value: totalN.toLocaleString(), icon: Ticket },
+    { label: "Auto-resolution rate", value: `${autoResolvedPct}%`, icon: CheckCircle2 },
+    { label: "Human escalations", value: escalations.toLocaleString(), icon: UserRound },
+    { label: "Est. labor saved", value: `≈${laborHoursSaved.toLocaleString()} hrs`, icon: Timer },
+    { label: "Avg response", value: formatSeconds(avgSecs), icon: Zap }
   ];
 
   return (
