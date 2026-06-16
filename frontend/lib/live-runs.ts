@@ -68,7 +68,13 @@ export type DayBucket = {
   cost: number;
 };
 
-function localDateKey(iso: string): string {
+/**
+ * Local Y-M-D key for a run's timestamp. EXPORTED so both the aggregate
+ * grouping (`readRunsByDay`) and the raw per-day grouping (`readRunsByDayList`,
+ * used by the calendar's Expand modal) share one key implementation and can't
+ * drift apart.
+ */
+export function localDateKey(iso: string): string {
   const d = new Date(iso);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -101,4 +107,20 @@ export function readRunsByDay(): Record<string, DayBucket> {
     b.cost += Number(r.cost) || 0;
   }
   return buckets;
+}
+
+/**
+ * Group the raw runs by the SAME local-date key as `readRunsByDay`, so the
+ * calendar can hand each day node its individual tickets (for the Expand modal)
+ * alongside the aggregate bucket. Aggregates intentionally drop per-ticket
+ * detail; this preserves it.
+ */
+export function readRunsByDayList(): Record<string, LiveRun[]> {
+  const byDay: Record<string, LiveRun[]> = {};
+  for (const r of readLiveRuns()) {
+    if (!r.timestamp) continue;
+    const key = localDateKey(r.timestamp);
+    (byDay[key] ??= []).push(r);
+  }
+  return byDay;
 }

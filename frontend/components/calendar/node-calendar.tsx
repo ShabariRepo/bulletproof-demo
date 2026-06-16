@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Coins, Flame, ShieldAlert, Ticket, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Coins, Flame, Maximize2, ShieldAlert, Ticket, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { DayDetailModal } from "@/components/calendar/day-detail-modal";
 import { cn } from "@/lib/utils";
-import type { DayBucket } from "@/lib/live-runs";
+import type { DayBucket, LiveRun } from "@/lib/live-runs";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = [
@@ -43,7 +44,13 @@ function intensity(total: number, max: number): number {
   return Math.sqrt(total / max);
 }
 
-export function NodeCalendar({ buckets }: { buckets: Record<string, DayBucket> }) {
+export function NodeCalendar({
+  buckets,
+  runsByDay
+}: {
+  buckets: Record<string, DayBucket>;
+  runsByDay: Record<string, LiveRun[]>;
+}) {
   // Default to the month of the most recent run, else the current month.
   const initial = useMemo(() => {
     const keys = Object.keys(buckets).sort();
@@ -54,6 +61,8 @@ export function NodeCalendar({ buckets }: { buckets: Record<string, DayBucket> }
 
   const [cursor, setCursor] = useState(initial);
   const [selected, setSelected] = useState<string | null>(null);
+  // The day whose Expand modal is open (null = closed).
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const { year, month } = cursor;
   const firstDay = new Date(year, month, 1).getDay();
@@ -196,6 +205,8 @@ export function NodeCalendar({ buckets }: { buckets: Record<string, DayBucket> }
               <DayBreakdown
                 dateKey={selected!}
                 bucket={selectedBucket}
+                ticketCount={(runsByDay[selected!] ?? []).length}
+                onExpand={() => setExpanded(selected)}
                 onClose={() => setSelected(null)}
               />
             ) : selected ? (
@@ -211,6 +222,14 @@ export function NodeCalendar({ buckets }: { buckets: Record<string, DayBucket> }
           </CardContent>
         </Card>
       </div>
+
+      {expanded && (
+        <DayDetailModal
+          date={expanded}
+          runs={runsByDay[expanded] ?? []}
+          onClose={() => setExpanded(null)}
+        />
+      )}
     </div>
   );
 }
@@ -280,7 +299,19 @@ function DayNode({
   );
 }
 
-function DayBreakdown({ dateKey, bucket, onClose }: { dateKey: string; bucket: DayBucket; onClose: () => void }) {
+function DayBreakdown({
+  dateKey,
+  bucket,
+  ticketCount,
+  onExpand,
+  onClose
+}: {
+  dateKey: string;
+  bucket: DayBucket;
+  ticketCount: number;
+  onExpand: () => void;
+  onClose: () => void;
+}) {
   const friendly = new Date(dateKey + "T00:00:00").toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -305,6 +336,17 @@ function DayBreakdown({ dateKey, bucket, onClose }: { dateKey: string; bucket: D
           <X className="h-4 w-4" />
         </button>
       </div>
+
+      {ticketCount > 0 && (
+        <button
+          type="button"
+          onClick={onExpand}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+        >
+          <Maximize2 className="h-4 w-4" />
+          Expand — view all {ticketCount} ticket{ticketCount === 1 ? "" : "s"}
+        </button>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Metric label="Tickets" value={bucket.total} tone="primary" />

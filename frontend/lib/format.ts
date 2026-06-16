@@ -29,6 +29,15 @@ export function formatDateTime(iso: string) {
   });
 }
 
+// Deterministic time-of-day formatter (pinned locale, same rationale as
+// formatDateTime) — safe to render server-side without a hydration mismatch.
+export function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
 export function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
     year: "numeric",
