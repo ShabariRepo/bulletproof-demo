@@ -11,5 +11,6 @@ frontend/out
 frontend/.vercel
 frontend/tsconfig.tsbuildinfo
 frontend/.env*.local
+frontend/data/live-runs.json
 node_modules/
 .next/

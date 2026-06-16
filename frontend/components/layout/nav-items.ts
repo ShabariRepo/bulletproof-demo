@@ -1,10 +1,15 @@
-import { BookOpen, Cable, LayoutDashboard, Settings, Ticket } from "lucide-react";
+import { Activity, BookOpen, Cable, LayoutDashboard, Settings, Ticket } from "lucide-react";
 
 export const navItems = [
   {
     href: "/",
     label: "Dashboard",
     icon: LayoutDashboard
+  },
+  {
+    href: "/simulate",
+    label: "Live Sim",
+    icon: Activity
   },
   {
     href: "/tickets/BP-001",
