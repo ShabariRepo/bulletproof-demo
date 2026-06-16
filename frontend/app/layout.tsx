@@ -4,7 +4,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Silver Bullet",
+  title: "Kevlar",
   description: "Bulletproof Tier 1 support dashboard"
 };
 
@@ -15,7 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="flex min-h-screen bg-background">
           <Sidebar />
           <div className="min-w-0 flex-1 overflow-x-hidden">
-            <TopBar title="Silver Bullet" />
+            <TopBar title="Kevlar" />
             <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-5 lg:px-8">{children}</main>
           </div>
         </div>

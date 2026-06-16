@@ -14,7 +14,7 @@ export function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <Link href="/" onClick={onNavigate} className="mb-10 block">
-        <div className="text-xl font-semibold tracking-normal text-zinc-50">Silver Bullet</div>
+        <div className="text-xl font-semibold tracking-normal text-zinc-50">Kevlar</div>
         <div className="mt-1 text-xs uppercase tracking-[0.18em] text-zinc-500">Bulletproof Tier 1</div>
       </Link>
       <nav className="space-y-1">

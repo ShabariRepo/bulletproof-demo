@@ -24,7 +24,7 @@ export function normalizeHaloTicket(payload: Record<string, unknown>): DemoTicke
     subject,
     body: [client ? `Client: ${client}` : null, details].filter(Boolean).join("\n\n"),
     expectedRouting: "general-support",
-    expectedOutcome: "Imported from Halo for Silver Bullet triage"
+    expectedOutcome: "Imported from Halo for Kevlar triage"
   };
 }
 
