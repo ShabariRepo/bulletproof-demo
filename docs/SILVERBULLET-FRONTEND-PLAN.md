@@ -2,7 +2,7 @@
 
 **Audience:** Internal (Shabari + Chris Simm, CTO, Bulletproof)
 **Status:** Local implementation in progress — Phase 0 complete, Phase 1-4 demo paths implemented with mock defaults
-**Last updated:** 2026-06-11
+**Last updated:** 2026-06-15
 **Backing repo:** `~/Desktop/code/bulletproof-demo` (this repo)
 **Backing platform:** Bonito (`api.getbonito.com`)
 
@@ -10,11 +10,11 @@
 
 ## TL;DR
 
-We have a working CLI demo of Silver Bullet (5 agents, 5 KBs, Halo mock, Sentinel simulator, 10 test tickets, 10/10 routing accuracy). We do NOT have a frontend Chris can show his ELT or click around on. This plan defines a 4-phase build to ship one — culminating in a demo connected to Bulletproof's real Azure tenant, real Halo ITSM, and real N-able events.
+We have a CLI demo of Silver Bullet (5 agents, 5 KBs, Halo mock, Sentinel simulator, 10 test tickets) and a local frontend. The old "10/10 routing accuracy" headline is now split into two metrics: triage/escalation correctness and resolution-quality correctness. This plan defines the 4-phase build to connect the demo to Bulletproof's real Azure tenant, real Halo ITSM, and real N-able events.
 
 **Target outcome:** A web app Chris can hit at `silverbullet.demo.getbonito.com` (or similar) that shows tickets flowing in, agents triaging them, KB articles being cited, and tickets being closed back to Halo — using **his actual stack** as much as we can get access to.
 
-## Implementation status as of 2026-06-11
+## Implementation status as of 2026-06-15
 
 The frontend now exists under `frontend/` and builds locally. It runs in mock mode by default so it can be shown without Bulletproof tenant access.
 
@@ -27,7 +27,7 @@ The frontend now exists under `frontend/` and builds locally. It runs in mock mo
 | 4 — Azure provider | Implemented as config validation | Settings captures Azure fields and `/api/azure/provider` returns readiness + `bonito.yaml` snippet. Real switch remains blocked on Bulletproof Azure access. |
 
 Remaining external blockers:
-- Bulletproof Bonito credentials or service token for live agent execution.
+- Scoped Bonito `bp-*` token for provisioning and live agent execution.
 - Halo sandbox tenant/client credentials, or running `src/halo_mock.py` locally.
 - Real N-able and Sentinel webhook registration in Bulletproof environments.
 - Bulletproof Azure subscription/provider setup.
@@ -49,17 +49,18 @@ Remaining external blockers:
 | End-to-end CLI runner | `src/run_demo.py` |
 | Provisioning script (deploys agents + KBs to Bonito prod) | `setup/provision.py` |
 
-**Measured results (2026-05-25):**
-- Routing accuracy: 10/10 (100%)
+**Saved run status (annotated 2026-06-15):**
+- Triage/escalation correctness: 10/10 (100%)
+- Resolution-quality correctness: 4/10 (40%) on the old saved run
 - Total cost across 10 tickets: $0.011
 - Avg response time: 30.1s
-- 2 known issues: BP-004 (KB precedence), BP-007 (delegation tool errors)
+- Saved run still contains pre-fix failures including BP-004, BP-007, and BP-008. Regenerate after provisioning with a scoped `bp-*` token.
 
 ### What's missing
 
-- **No web UI.** Everything runs via `python -m src.run_demo`. Chris can't show his team a click-around demo.
-- **No live integrations.** Halo is mocked, Sentinel is simulated, no real Azure connection (we're using Bonito's managed providers — gpt-4o-mini through OpenAI managed key).
-- **No persistence visible to a user.** Run results go to `results.json` on disk. No history view, no per-ticket detail page, no agent-trace visualization.
+- **No deployed URL yet.** The frontend exists locally but has not been deployed to Vercel.
+- **No verified live integrations yet.** Halo/N-able/Sentinel/Azure paths exist in UI/API but need tenant credentials and webhook registration.
+- **No regenerated passing prod run yet.** The old saved run is honest 10/10 triage, 4/10 resolution quality.
 - **No tenant isolation in the demo.** All runs hit one Bonito project. For a real Bulletproof deployment we'd want per-client tenant isolation.
 
 ---

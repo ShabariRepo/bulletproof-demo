@@ -48,7 +48,7 @@ tickets:
       due to server communication error. Error 443." I was working fine
       yesterday. Running Windows 11, AnyConnect 4.10.
     expected_routing: connectivity-specialist
-    expected_outcome: "Troubleshoot DNS, check cert expiry, provide AnyConnect 443 resolution steps"
+    expected_outcome: "Correct user's AnyConnect claim using client-directory; troubleshoot Apex's Zscaler ZPA / Client Connector access path"
 
   - id: BP-005
     type: vpn_access

@@ -12,6 +12,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from .evaluation import summarize
+
 
 def print_report(results: list[dict[str, Any]]) -> None:
     """Print a formatted summary report of the demo run."""
@@ -30,22 +32,30 @@ def print_report(results: list[dict[str, Any]]) -> None:
     table.add_column("Type", width=16)
     table.add_column("Expected", width=20)
     table.add_column("Actual", width=20)
-    table.add_column("Match", width=5, justify="center")
+    table.add_column("Route", width=5, justify="center")
+    table.add_column("Res", width=5, justify="center")
     table.add_column("Sev", width=4, justify="center")
     table.add_column("Conf", width=5, justify="right")
     table.add_column("Time", width=6, justify="right")
     table.add_column("Model", width=14)
 
+    summary_data = summarize(results)
+    evaluated = summary_data["results"]
     correct = 0
+    resolution_correct = 0
     total_time = 0.0
     total_tokens = 0
     total_cost = 0.0
 
-    for r in results:
-        match = r.get("routing_correct", False)
+    for r in evaluated:
+        match = r.get("triage_correct", False)
+        resolution_match = r.get("resolution_quality_correct", False)
         if match:
             correct += 1
+        if resolution_match:
+            resolution_correct += 1
         match_icon = "[green]Y[/]" if match else "[red]N[/]"
+        resolution_icon = "[green]Y[/]" if resolution_match else "[red]N[/]"
         elapsed = r.get("elapsed_seconds", 0)
         total_time += elapsed
         total_tokens += r.get("tokens", 0)
@@ -57,6 +67,7 @@ def print_report(results: list[dict[str, Any]]) -> None:
             r["expected_routing"],
             r["actual_routing"],
             match_icon,
+            resolution_icon,
             r.get("severity", "?"),
             str(r.get("confidence", "?")),
             f"{elapsed:.1f}s",
@@ -68,13 +79,15 @@ def print_report(results: list[dict[str, Any]]) -> None:
     # Summary stats
     n = len(results)
     accuracy = correct / n * 100 if n else 0
+    resolution_accuracy = resolution_correct / n * 100 if n else 0
     avg_time = total_time / n if n else 0
 
     summary = Table.grid(padding=(0, 2))
     summary.add_column(style="bold cyan")
     summary.add_column()
     summary.add_row("Tickets processed:", str(n))
-    summary.add_row("Routing accuracy:", f"{correct}/{n} ({accuracy:.0f}%)")
+    summary.add_row("Triage/escalation correctness:", f"{correct}/{n} ({accuracy:.0f}%)")
+    summary.add_row("Resolution-quality correctness:", f"{resolution_correct}/{n} ({resolution_accuracy:.0f}%)")
     summary.add_row("Avg response time:", f"{avg_time:.1f}s")
     summary.add_row("Total time:", f"{total_time:.1f}s")
     summary.add_row("Total tokens:", f"{total_tokens:,}")
@@ -83,12 +96,20 @@ def print_report(results: list[dict[str, Any]]) -> None:
     console.print(Panel(summary, title="[bold]Summary[/]", border_style="cyan"))
 
     # Misrouted tickets
-    misrouted = [r for r in results if not r.get("routing_correct", False)]
+    misrouted = [r for r in evaluated if not r.get("triage_correct", False)]
     if misrouted:
         console.print(f"\n[bold red]Misrouted tickets ({len(misrouted)}):[/]")
         for r in misrouted:
             console.print(f"  {r['ticket_id']}: expected={r['expected_routing']}, got={r['actual_routing']}")
     else:
-        console.print("\n[bold green]All tickets routed correctly![/]")
+        console.print("\n[bold green]All tickets passed triage/escalation checks![/]")
+
+    bad_resolution = [r for r in evaluated if not r.get("resolution_quality_correct", False)]
+    if bad_resolution:
+        console.print(f"\n[bold red]Resolution-quality failures ({len(bad_resolution)}):[/]")
+        for r in bad_resolution:
+            console.print(f"  {r['ticket_id']}: {'; '.join(r.get('resolution_failures', []))}")
+    else:
+        console.print("[bold green]All tickets passed resolution-quality checks![/]")
 
     console.print()

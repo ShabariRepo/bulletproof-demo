@@ -57,7 +57,8 @@ KB_DEFS = {
 
 # Agent definitions: key -> (display_name, prompt_path, model, kb_keys, tool_policy)
 AGENT_DEFS = {
-    # Router: gpt-4o-mini — fast classification, cheap, proven 10/10 routing
+    # All agents use gpt-4o-mini. This is the actual deployed demo model and
+    # keeps bonito.yaml, provisioning, and results.json aligned.
     "triage-router": (
         "Triage Router",
         "agents/triage-router/system-prompt.md",
@@ -65,42 +66,33 @@ AGENT_DEFS = {
         ["client-directory", "escalation-matrix"],
         {"mode": "allowlist", "allowed": ["invoke_agent", "search_knowledge_base"]},
     ),
-    # Password: gpt-4o-mini — KB-driven resolution is procedural, speed wins
-    # for demo. Sonnet via Bedrock adds too much latency.
     "password-specialist": (
         "Password & Account Specialist",
         "agents/password-specialist/system-prompt.md",
         "gpt-4o-mini",
         ["password-procedures", "client-directory"],
-        {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
-         "http_allowlist": ["http://localhost:8090/*"]},
+        {"mode": "allowlist", "allowed": ["search_knowledge_base"]},
     ),
-    # Connectivity: Groq Llama — VPN troubleshooting is procedural, speed wins
     "connectivity-specialist": (
         "Connectivity & VPN Specialist",
         "agents/connectivity-specialist/system-prompt.md",
-        "llama-3.3-70b-versatile",
+        "gpt-4o-mini",
         ["vpn-procedures", "client-directory"],
-        {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
-         "http_allowlist": ["http://localhost:8090/*"]},
+        {"mode": "allowlist", "allowed": ["search_knowledge_base"]},
     ),
-    # Software: Groq Llama — approve/deny is straightforward, fast turnaround
     "software-specialist": (
         "Software & Provisioning Specialist",
         "agents/software-specialist/system-prompt.md",
-        "llama-3.3-70b-versatile",
+        "gpt-4o-mini",
         ["approved-software", "client-directory"],
-        {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
-         "http_allowlist": ["http://localhost:8090/*"]},
+        {"mode": "allowlist", "allowed": ["search_knowledge_base"]},
     ),
-    # General: Groq Llama — hardware triage is simple, speed matters
     "general-support": (
         "General Support",
         "agents/general-support/system-prompt.md",
-        "llama-3.3-70b-versatile",
+        "gpt-4o-mini",
         ["client-directory", "escalation-matrix"],
-        {"mode": "allowlist", "allowed": ["search_knowledge_base", "http_request"],
-         "http_allowlist": ["http://localhost:8090/*"]},
+        {"mode": "allowlist", "allowed": ["search_knowledge_base"]},
     ),
 }
 
@@ -161,10 +153,15 @@ async def main():
                 console.print(f"  [red]Failed to create KB '{name}': {e}[/]")
                 continue
 
-        # Upload document
+        # Upload document idempotently. Bonito does not de-dupe uploads by
+        # filename, so remove prior copies of the same source document first.
         doc_file = BASE_DIR / doc_path
         if doc_file.exists():
             try:
+                for doc in await client.list_documents(kb_ids[key]):
+                    doc_name = str(doc.get("filename") or doc.get("name") or "")
+                    if doc_name == doc_file.name:
+                        await client.delete_document(kb_ids[key], doc["id"])
                 await client.upload_document(kb_ids[key], str(doc_file))
                 console.print(f"    [green]Uploaded {doc_path}[/]")
             except Exception as e:
@@ -179,26 +176,27 @@ async def main():
     agent_ids: dict[str, str] = {}
 
     for key, (display_name, prompt_path, model, kb_keys, tool_policy) in AGENT_DEFS.items():
+        # Read system prompt and resolve KB IDs for both creates and updates.
+        prompt_file = BASE_DIR / prompt_path
+        system_prompt = prompt_file.read_text() if prompt_file.exists() else f"You are {display_name}."
+        agent_kb_ids = [kb_ids[k] for k in kb_keys if k in kb_ids]
+        agent_data = {
+            "name": display_name,
+            "description": f"Silver Bullet — {display_name}",
+            "system_prompt": system_prompt,
+            "model_id": model,
+            "knowledge_base_ids": agent_kb_ids,
+            "tool_policy": tool_policy,
+        }
+
         if display_name in agent_name_to_id:
             agent_ids[key] = agent_name_to_id[display_name]
-            console.print(f"  [dim]Agent '{display_name}' already exists: {agent_ids[key]}[/]")
+            try:
+                await client.update_agent(agent_ids[key], agent_data)
+                console.print(f"  [green]Updated agent '{display_name}': {agent_ids[key]}[/]")
+            except Exception as e:
+                console.print(f"  [yellow]Agent '{display_name}' exists but update failed: {e}[/]")
         else:
-            # Read system prompt
-            prompt_file = BASE_DIR / prompt_path
-            system_prompt = prompt_file.read_text() if prompt_file.exists() else f"You are {display_name}."
-
-            # Resolve KB IDs
-            agent_kb_ids = [kb_ids[k] for k in kb_keys if k in kb_ids]
-
-            agent_data = {
-                "name": display_name,
-                "description": f"Silver Bullet — {display_name}",
-                "system_prompt": system_prompt,
-                "model_id": model,
-                "knowledge_base_ids": agent_kb_ids,
-                "tool_policy": tool_policy,
-            }
-
             try:
                 agent = await client.create_agent(project_id, agent_data)
                 agent_ids[key] = agent["id"]

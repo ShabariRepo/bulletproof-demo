@@ -25,6 +25,7 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
 from .bonito_client import BonitoClient
+from .evaluation import attach_evaluation, summarize
 from .ticket_runner import run_ticket
 from .report import print_report
 
@@ -130,7 +131,7 @@ async def main():
 
             except Exception as e:
                 console.print(f"  [red]{ticket['id']} FAILED: {e}[/]")
-                results.append({
+                results.append(attach_evaluation({
                     "ticket_id": ticket["id"],
                     "ticket_type": ticket["type"],
                     "subject": ticket["subject"],
@@ -147,7 +148,7 @@ async def main():
                     "cost": 0,
                     "session_id": None,
                     "elapsed_seconds": 0,
-                })
+                }))
 
             progress.advance(task)
 
@@ -156,20 +157,15 @@ async def main():
                 await asyncio.sleep(1)
 
     # Print summary report
-    print_report(results)
+    summary = summarize(results)
+    evaluated_results = summary["results"]
+    print_report(evaluated_results)
 
     # Save raw results
     import json
     output_path = Path(__file__).parent.parent / "results.json"
     with open(output_path, "w") as f:
-        # Remove full response text for cleaner output
-        clean = []
-        for r in results:
-            c = dict(r)
-            if len(c.get("response", "")) > 500:
-                c["response"] = c["response"][:500] + "..."
-            clean.append(c)
-        json.dump(clean, f, indent=2, default=str)
+        json.dump(evaluated_results, f, indent=2, default=str)
     console.print(f"[dim]Raw results saved to {output_path}[/]")
 
 
