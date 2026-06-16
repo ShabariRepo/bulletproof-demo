@@ -1,22 +1,14 @@
 import Link from "next/link";
-import { Activity, ArrowUpRight, Clock, Coins, Gauge, Ticket } from "lucide-react";
+import { ArrowUpRight, Clock, Coins, Gauge, Ticket } from "lucide-react";
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
+import { RecentRuns } from "@/components/dashboard/recent-runs";
 import { StatusBadge } from "@/components/tickets/status-badge";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatSeconds, getDashboardMetrics, getTicketViews } from "@/lib/demo-data";
 import { readLiveRuns } from "@/lib/live-runs";
 
 export const dynamic = "force-dynamic";
-
-const specialistDisplay: Record<string, string> = {
-  "password-specialist": "Password & Account Specialist",
-  "connectivity-specialist": "Connectivity & VPN Specialist",
-  "software-specialist": "Software & Provisioning Specialist",
-  "general-support": "General Support",
-  ESCALATION: "Human escalation"
-};
 
 export default function DashboardPage() {
   const metrics = getDashboardMetrics();
@@ -115,32 +107,7 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {liveRuns.map((run) => (
-                <TableRow key={run.runId} className="bg-primary/[0.03]">
-                  <TableCell className="font-medium text-zinc-100">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs">{run.ticketLabel}</span>
-                      <Badge variant="default" className="gap-1 text-[10px]">
-                        <Activity className="h-3 w-3" />
-                        LIVE
-                      </Badge>
-                    </div>
-                    <div className="mt-1 text-[11px] text-zinc-500">{new Date(run.timestamp).toLocaleString()}</div>
-                  </TableCell>
-                  <TableCell className="min-w-72 text-zinc-300">{run.subject}</TableCell>
-                  <TableCell className="text-zinc-400">
-                    {specialistDisplay[run.routing] ?? run.routing}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={run.routing === "ESCALATION" ? "escalated" : run.resolved ? "resolved" : "in-progress"} />
-                  </TableCell>
-                  <TableCell className={run.triageCorrect && run.resolved ? "text-emerald-300" : "text-amber-300"}>
-                    {run.triageCorrect && run.resolved ? "Pass" : "Review"}
-                  </TableCell>
-                  <TableCell className="text-zinc-400">{formatSeconds(run.elapsedSeconds)}</TableCell>
-                  <TableCell className="text-zinc-400">{formatCurrency(run.cost)}</TableCell>
-                </TableRow>
-              ))}
+              <RecentRuns runs={liveRuns} />
               {tickets.map((view) => (
                 <TableRow key={view.ticket.id}>
                   <TableCell className="font-medium text-zinc-100">

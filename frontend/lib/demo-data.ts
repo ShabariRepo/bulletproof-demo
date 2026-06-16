@@ -354,15 +354,7 @@ export const getDashboardMetrics = cache((): DashboardMetrics => {
   };
 });
 
-export function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4
-  }).format(value);
-}
-
-export function formatSeconds(value: number) {
-  return `${value.toFixed(1)}s`;
-}
+// Re-exported from the client-safe module so existing imports
+// (`from "@/lib/demo-data"`) keep working while client components can import the
+// formatters directly from "@/lib/format" without pulling in node:fs.
+export { formatCurrency, formatSeconds } from "@/lib/format";

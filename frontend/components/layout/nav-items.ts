@@ -17,7 +17,7 @@ export const navItems = [
     icon: CalendarDays
   },
   {
-    href: "/tickets/BP-001",
+    href: "/tickets",
     label: "Tickets",
     icon: Ticket
   },
