@@ -11,6 +11,7 @@ import time
 from typing import Any
 
 from .bonito_client import BonitoClient
+from .evaluation import attach_evaluation, check_routing
 
 
 async def run_ticket(
@@ -65,23 +66,26 @@ async def run_ticket(
         specialist_response = parsed.get("specialist_response")
         classification = parsed.get("classification", "")
 
-        # If there's a specialist_response, delegation happened regardless of action label
-        if specialist_response and specialist_response not in ("null", "None", ""):
-            actual_routing = classification_map.get(classification, specialist or classification)
-        elif action == "escalate":
+        # Escalation wins unambiguously: an escalated ticket can still carry a
+        # specialist_response (the escalation handler's reply), so check action
+        # FIRST — otherwise a populated specialist_response misroutes it.
+        if action == "escalate":
             actual_routing = "ESCALATION"
+        # Otherwise, a specialist_response means delegation happened.
+        elif specialist_response and specialist_response not in ("null", "None", ""):
+            actual_routing = classification_map.get(classification, specialist or classification)
         elif specialist and specialist not in ("null", "None"):
             actual_routing = specialist
         elif action == "delegate":
             actual_routing = classification_map.get(classification, classification)
 
-    return {
+    return attach_evaluation({
         "ticket_id": ticket["id"],
         "ticket_type": ticket["type"],
         "subject": ticket["subject"],
         "expected_routing": ticket.get("expected_routing", "unknown"),
         "actual_routing": actual_routing,
-        "routing_correct": _check_routing(ticket.get("expected_routing", ""), actual_routing),
+        "routing_correct": check_routing(ticket.get("expected_routing", ""), actual_routing),
         "severity": parsed.get("severity", "unknown"),
         "confidence": parsed.get("confidence", 0),
         "classification": parsed.get("classification", "unknown"),
@@ -92,22 +96,4 @@ async def run_ticket(
         "cost": result.get("cost", 0),
         "session_id": result.get("session_id"),
         "elapsed_seconds": round(elapsed, 1),
-    }
-
-
-def _check_routing(expected: str, actual: str) -> bool:
-    """Check if actual routing matches expected (fuzzy match)."""
-    if not expected or not actual:
-        return False
-    expected = expected.lower().strip()
-    actual = actual.lower().strip()
-    # Direct match
-    if expected == actual:
-        return True
-    # Partial match (e.g., "password" matches "password-specialist")
-    if expected in actual or actual in expected:
-        return True
-    # Both are escalation
-    if "escalat" in expected and "escalat" in actual:
-        return True
-    return False
+    })

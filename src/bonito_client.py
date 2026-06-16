@@ -1,18 +1,18 @@
 """
 Silver Bullet — Bonito Platform Client
 
-JWT-authenticated client for Bonito agent execution, KB management,
-and agent provisioning. Adapted from Duncan Lane's bonito_client.py.
+Token-authenticated client for Bonito agent execution, KB management,
+and agent provisioning. Uses scoped bp-* tokens for the demo security story.
 """
 
 from __future__ import annotations
+import time
 
 import asyncio
 import json
 import logging
 import os
 import re
-import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -31,38 +31,22 @@ class BonitoClient:
     def __init__(
         self,
         base_url: str = "",
-        email: str = "",
-        password: str = "",
+        api_token: str = "",
     ) -> None:
         self.base_url = (base_url or os.getenv("BONITO_URL", "https://api.getbonito.com")).rstrip("/")
-        self._email = email or os.getenv("BONITO_EMAIL", "")
-        self._password = password or os.getenv("BONITO_PASSWORD", "")
-        self._jwt_token: Optional[str] = None
-        self._jwt_expires: float = 0
+        self._api_token = api_token or os.getenv("BONITO_API_TOKEN", "") or os.getenv("BONITO_TOKEN", "")
 
-    async def _get_jwt(self) -> str:
-        """Get a valid JWT token, logging in if needed."""
-        now = time.monotonic()
-        if self._jwt_token and now < self._jwt_expires:
-            return self._jwt_token
-
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.post(
-                f"{self.base_url}/api/auth/login",
-                json={"email": self._email, "password": self._password},
+        if not self._api_token:
+            raise RuntimeError(
+                "BONITO_API_TOKEN is required. Create a scoped bp-* personal or project token; "
+                "the demo no longer logs in with a full account password."
             )
-            resp.raise_for_status()
-            data = resp.json()
+        if not self._api_token.startswith("bp-"):
+            raise RuntimeError("BONITO_API_TOKEN must be a scoped bp-* token for this demo.")
 
-        self._jwt_token = data.get("access_token", data.get("token", ""))
-        self._jwt_expires = now + 25 * 60  # Refresh every 25 min
-        logger.info("Bonito JWT refreshed for %s", self._email)
-        return self._jwt_token
-
-    async def _headers(self) -> dict[str, str]:
-        jwt = await self._get_jwt()
+    def _headers(self) -> dict[str, str]:
         return {
-            "Authorization": f"Bearer {jwt}",
+            "Authorization": f"Bearer {self._api_token}",
             "Content-Type": "application/json",
         }
 
@@ -93,12 +77,8 @@ class BonitoClient:
 
         for attempt in range(MAX_RETRIES + 1):
             try:
-                headers = await self._headers()
-                if attempt > 0:
-                    headers = await self._headers()  # Re-fetch JWT on retry
-
                 async with httpx.AsyncClient(timeout=timeout) as client:
-                    resp = await client.post(url, json=body, headers=headers)
+                    resp = await client.post(url, json=body, headers=self._headers())
                     resp.raise_for_status()
                     data = resp.json()
 
@@ -144,15 +124,13 @@ class BonitoClient:
 
     async def list_knowledge_bases(self) -> list[dict]:
         """List all knowledge bases in the org."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.get(f"{self.base_url}/api/knowledge-bases", headers=headers)
+            resp = await client.get(f"{self.base_url}/api/knowledge-bases", headers=self._headers())
             resp.raise_for_status()
             return resp.json()
 
     async def create_knowledge_base(self, name: str, description: str = "") -> dict:
         """Create a new knowledge base."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{self.base_url}/api/knowledge-bases",
@@ -162,24 +140,23 @@ class BonitoClient:
                     "source_type": "upload",
                     "embedding_model": "auto",
                 },
-                headers=headers,
+                headers=self._headers(),
             )
             resp.raise_for_status()
             return resp.json()
 
     async def delete_knowledge_base(self, kb_id: str) -> None:
         """Delete a knowledge base and all its documents/chunks."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.delete(
                 f"{self.base_url}/api/knowledge-bases/{kb_id}",
-                headers=headers,
+                headers=self._headers(),
             )
             resp.raise_for_status()
 
     async def upload_document(self, kb_id: str, filepath: str) -> dict:
         """Upload a document to a knowledge base."""
-        headers = await self._headers()
+        headers = self._headers()
         del headers["Content-Type"]  # Let httpx set multipart boundary
         path = Path(filepath)
         async with httpx.AsyncClient(timeout=120.0) as client:
@@ -194,22 +171,20 @@ class BonitoClient:
 
     async def list_documents(self, kb_id: str) -> list[dict]:
         """List all documents in a knowledge base."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.get(
                 f"{self.base_url}/api/knowledge-bases/{kb_id}/documents",
-                headers=headers,
+                headers=self._headers(),
             )
             resp.raise_for_status()
             return resp.json()
 
     async def delete_document(self, kb_id: str, doc_id: str) -> None:
         """Delete a document from a knowledge base."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.delete(
                 f"{self.base_url}/api/knowledge-bases/{kb_id}/documents/{doc_id}",
-                headers=headers,
+                headers=self._headers(),
             )
             resp.raise_for_status()
 
@@ -219,20 +194,18 @@ class BonitoClient:
 
     async def list_projects(self) -> list[dict]:
         """List all projects in the org."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.get(f"{self.base_url}/api/projects", headers=headers)
+            resp = await client.get(f"{self.base_url}/api/projects", headers=self._headers())
             resp.raise_for_status()
             return resp.json()
 
     async def create_project(self, name: str, description: str = "") -> dict:
         """Create a new project."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{self.base_url}/api/projects",
                 json={"name": name, "description": description},
-                headers=headers,
+                headers=self._headers(),
             )
             resp.raise_for_status()
             return resp.json()
@@ -243,35 +216,32 @@ class BonitoClient:
 
     async def list_agents(self, project_id: str) -> list[dict]:
         """List all agents in a project."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.get(
                 f"{self.base_url}/api/projects/{project_id}/agents",
-                headers=headers,
+                headers=self._headers(),
             )
             resp.raise_for_status()
             return resp.json()
 
     async def create_agent(self, project_id: str, agent_data: dict) -> dict:
         """Create a new agent in a project."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{self.base_url}/api/projects/{project_id}/agents",
                 json=agent_data,
-                headers=headers,
+                headers=self._headers(),
             )
             resp.raise_for_status()
             return resp.json()
 
     async def update_agent(self, agent_id: str, agent_data: dict) -> dict:
         """Update an existing agent."""
-        headers = await self._headers()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.patch(
                 f"{self.base_url}/api/agents/{agent_id}",
                 json=agent_data,
-                headers=headers,
+                headers=self._headers(),
             )
             resp.raise_for_status()
             return resp.json()
@@ -281,7 +251,6 @@ class BonitoClient:
         label: str = "",
     ) -> dict:
         """Create a connection between two agents."""
-        headers = await self._headers()
         body = {
             "target_agent_id": target_agent_id,
             "connection_type": connection_type,
@@ -292,7 +261,7 @@ class BonitoClient:
             resp = await client.post(
                 f"{self.base_url}/api/agents/{agent_id}/connections",
                 json=body,
-                headers=headers,
+                headers=self._headers(),
             )
             resp.raise_for_status()
             return resp.json()
@@ -303,11 +272,24 @@ class BonitoClient:
 
     @staticmethod
     def parse_json(text: str) -> dict[str, Any]:
-        """Extract JSON from an agent response (handles markdown fences)."""
+        """Extract JSON from an agent response (handles markdown fences).
+
+        The triage agent wraps its answer in a ```json fence AND embeds the
+        specialist's own ```json-fenced reply inside the `specialist_response`
+        string. A non-greedy fence regex stops at the FIRST closing ``` (the
+        nested one), corrupting the parse. So strip the OUTERMOST fence by line
+        (first ``` line + the LAST ```), leaving any nested fence intact inside
+        the string value — backticks are legal inside JSON strings.
+        """
         cleaned = text.strip()
-        fence = re.search(r"```(?:json)?\s*\n([\s\S]*?)```", cleaned)
-        if fence:
-            cleaned = fence.group(1).strip()
+        if cleaned.startswith("```"):
+            newline = cleaned.find("\n")
+            if newline != -1:
+                cleaned = cleaned[newline + 1:]
+            last_fence = cleaned.rfind("```")
+            if last_fence != -1:
+                cleaned = cleaned[:last_fence]
+            cleaned = cleaned.strip()
         try:
             return json.loads(cleaned)
         except json.JSONDecodeError:
