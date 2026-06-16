@@ -12,6 +12,10 @@ type DashboardChartsProps = {
 export function DashboardCharts({ categoryCounts, costOverTime }: DashboardChartsProps) {
   const maxCategory = Math.max(...categoryCounts.map((entry) => entry.value), 1);
   const maxCost = Math.max(...costOverTime.map((entry) => entry.cost), 0.0001);
+  // Bars are sized in PIXELS, not %: a percentage height only resolves against a
+  // parent with a definite height, and the flex-col column here is content-sized
+  // — so `height: X%` collapsed to 0 and the bars were invisible.
+  const BAR_AREA_PX = 200;
 
   return (
     <div className="grid gap-5 xl:grid-cols-2">
@@ -46,7 +50,7 @@ export function DashboardCharts({ categoryCounts, costOverTime }: DashboardChart
               <div key={entry.ticket} className="flex min-w-0 flex-1 flex-col items-center gap-2">
                 <div
                   className="w-full rounded-t bg-primary"
-                  style={{ height: `${Math.max((entry.cost / maxCost) * 100, 4)}%` }}
+                  style={{ height: `${Math.max((entry.cost / maxCost) * BAR_AREA_PX, 4)}px` }}
                   title={`${entry.ticket}: $${entry.cost.toFixed(6)}`}
                 />
                 <div className="text-[0.65rem] text-zinc-500">{entry.ticket.replace("BP-", "")}</div>
