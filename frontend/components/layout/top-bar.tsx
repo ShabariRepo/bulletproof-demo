@@ -9,7 +9,15 @@ export function TopBar({ title }: { title: string }) {
         <h1 className="truncate text-base font-semibold text-zinc-100 lg:text-lg">{title}</h1>
       </div>
       <Badge variant="outline" className="hidden shrink-0 whitespace-nowrap border-primary/40 text-zinc-300 xs:inline-flex">
-        Made on Bonito
+        Powered by{" "}
+        <a
+          href="https://getbonito.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-1 font-semibold text-primary transition-colors hover:text-primary/80 hover:underline"
+        >
+          Bonito
+        </a>
       </Badge>
     </header>
   );
