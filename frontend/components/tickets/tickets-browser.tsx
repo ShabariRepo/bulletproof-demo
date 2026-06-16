@@ -36,12 +36,12 @@ function SelectFilter({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-xs text-zinc-500">
+    <label className="flex min-w-[8rem] flex-1 flex-col gap-1 text-xs text-zinc-500 sm:flex-none">
       <span className="uppercase tracking-[0.14em]">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 rounded-md border border-border bg-zinc-950 px-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-primary"
+        className="h-9 w-full rounded-md border border-border bg-zinc-950 px-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-primary"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -175,11 +175,11 @@ export function TicketsBrowser({ rows }: { rows: TicketRow[] }) {
             <TableRow>
               <TableHead>Ticket</TableHead>
               <TableHead>Subject</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Routing</TableHead>
+              <TableHead className="hidden md:table-cell">Category</TableHead>
+              <TableHead className="hidden lg:table-cell">Routing</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Cost</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead className="hidden sm:table-cell">Cost</TableHead>
+              <TableHead className="hidden sm:table-cell">Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -200,9 +200,9 @@ export function TicketsBrowser({ rows }: { rows: TicketRow[] }) {
                       </Badge>
                     </div>
                   </TableCell>
-                  <TableCell className="min-w-72 text-zinc-300">{row.subject}</TableCell>
-                  <TableCell className="text-zinc-400">{row.category || "—"}</TableCell>
-                  <TableCell className="text-zinc-400">
+                  <TableCell className="text-zinc-300 sm:min-w-72">{row.subject}</TableCell>
+                  <TableCell className="hidden text-zinc-400 md:table-cell">{row.category || "—"}</TableCell>
+                  <TableCell className="hidden text-zinc-400 lg:table-cell">
                     {row.status === "escalated" ? (
                       <Badge variant="escalated" className="text-[10px]">
                         ESCALATED
@@ -214,8 +214,8 @@ export function TicketsBrowser({ rows }: { rows: TicketRow[] }) {
                   <TableCell>
                     <StatusBadge status={row.status} />
                   </TableCell>
-                  <TableCell className="text-zinc-400">{formatCurrency(row.cost)}</TableCell>
-                  <TableCell className="text-zinc-500">
+                  <TableCell className="hidden text-zinc-400 sm:table-cell">{formatCurrency(row.cost)}</TableCell>
+                  <TableCell className="hidden text-zinc-500 sm:table-cell">
                     {row.dateISO ? formatDate(row.dateISO) : "—"}
                   </TableCell>
                 </TableRow>

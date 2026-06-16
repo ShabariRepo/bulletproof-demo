@@ -90,7 +90,7 @@ export function IntegrationSettingsForm() {
       {savedAt ? <div className="text-sm text-emerald-300">Saved at {savedAt}</div> : null}
 
       <Tabs defaultValue="bonito" className="space-y-5">
-        <TabsList>
+        <TabsList className="flex h-auto max-w-full flex-wrap justify-start gap-1">
           {sections.map((section) => (
             <TabsTrigger key={section.id} value={section.id}>
               {section.label}
@@ -101,14 +101,14 @@ export function IntegrationSettingsForm() {
         {sections.map((section) => (
           <TabsContent key={section.id} value={section.id}>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-zinc-950">
+              <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-zinc-950">
                     <section.icon className="h-5 w-5 text-primary" />
                   </div>
-                  <CardTitle>{section.title}</CardTitle>
+                  <CardTitle className="min-w-0">{section.title}</CardTitle>
                 </div>
-                <Badge variant="outline" className="border-emerald-500/30 text-emerald-300">
+                <Badge variant="outline" className="shrink-0 border-emerald-500/30 text-emerald-300">
                   Configurable
                 </Badge>
               </CardHeader>
@@ -185,7 +185,7 @@ export function IntegrationSettingsForm() {
                     <Field label="Azure OpenAI endpoint" value={settings.azure.openAiEndpoint} onChange={(value) => update("azure", "openAiEndpoint", value)} />
                     <Field label="Deployment name" value={settings.azure.deploymentName} onChange={(value) => update("azure", "deploymentName", value)} />
                     <Field label="Log Analytics workspace" value={settings.azure.logAnalyticsWorkspace} onChange={(value) => update("azure", "logAnalyticsWorkspace", value)} />
-                    <pre className="md:col-span-2 whitespace-pre-wrap rounded-md border border-border bg-zinc-950 p-4 text-xs leading-5 text-zinc-400">
+                    <pre className="md:col-span-2 whitespace-pre-wrap break-words rounded-md border border-border bg-zinc-950 p-4 text-xs leading-5 text-zinc-400">
                       {snippet}
                     </pre>
                   </div>

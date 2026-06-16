@@ -1,12 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarInner } from "@/components/layout/sidebar";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close the drawer whenever the route changes so a tapped nav link never
+  // leaves the drawer hanging open over the new page.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Lock background scroll while the drawer is open.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   return (
     <>
@@ -15,14 +33,14 @@ export function MobileNav() {
         <span className="sr-only">Open navigation</span>
       </Button>
       {open ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-[60] lg:hidden">
           <button type="button" aria-label="Close navigation" className="absolute inset-0 bg-black/70" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-80 max-w-[85vw] border-r border-border bg-card p-6">
+          <div className="absolute left-0 top-0 h-full w-80 max-w-[85vw] overflow-y-auto border-r border-border bg-card p-6">
             <Button variant="ghost" size="icon" className="absolute right-3 top-3" onClick={() => setOpen(false)}>
               <X className="h-5 w-5" />
               <span className="sr-only">Close navigation</span>
             </Button>
-            <SidebarInner />
+            <SidebarInner onNavigate={() => setOpen(false)} />
           </div>
         </div>
       ) : null}

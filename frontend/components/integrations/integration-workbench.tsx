@@ -110,7 +110,7 @@ export function IntegrationWorkbench() {
           <CardTitle>Integration Output</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="min-h-[34rem] whitespace-pre-wrap rounded-md border border-border bg-zinc-950 p-4 text-xs leading-5 text-zinc-300">
+          <pre className="min-h-[34rem] whitespace-pre-wrap break-words rounded-md border border-border bg-zinc-950 p-4 text-xs leading-5 text-zinc-300">
             {output}
           </pre>
         </CardContent>

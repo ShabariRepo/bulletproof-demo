@@ -14,9 +14,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <div className="flex min-h-screen bg-background">
           <Sidebar />
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 overflow-x-hidden">
             <TopBar title="Silver Bullet" />
-            <main className="mx-auto w-full max-w-7xl px-5 py-8 lg:px-8">{children}</main>
+            <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-5 lg:px-8">{children}</main>
           </div>
         </div>
       </body>

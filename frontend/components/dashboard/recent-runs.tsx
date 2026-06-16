@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { liveRunToModal } from "@/lib/run-rows";
 import { formatCurrency, formatDateTime, formatSeconds } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { LiveRun } from "@/lib/live-runs";
 
 const specialistDisplay: Record<string, string> = {
@@ -45,16 +46,16 @@ export function RecentRuns({ runs }: { runs: LiveRun[] }) {
             </div>
             <div className="mt-1 text-[11px] text-zinc-500">{formatDateTime(run.timestamp)}</div>
           </TableCell>
-          <TableCell className="min-w-72 text-zinc-300">{run.subject}</TableCell>
-          <TableCell className="text-zinc-400">{specialistDisplay[run.routing] ?? run.routing}</TableCell>
+          <TableCell className="text-zinc-300 sm:min-w-72">{run.subject}</TableCell>
+          <TableCell className="hidden text-zinc-400 md:table-cell">{specialistDisplay[run.routing] ?? run.routing}</TableCell>
           <TableCell>
             <StatusBadge status={run.routing === "ESCALATION" ? "escalated" : run.resolved ? "resolved" : "in-progress"} />
           </TableCell>
-          <TableCell className={run.triageCorrect && run.resolved ? "text-emerald-300" : "text-amber-300"}>
+          <TableCell className={cn("hidden lg:table-cell", run.triageCorrect && run.resolved ? "text-emerald-300" : "text-amber-300")}>
             {run.triageCorrect && run.resolved ? "Pass" : "Review"}
           </TableCell>
-          <TableCell className="text-zinc-400">{formatSeconds(run.elapsedSeconds)}</TableCell>
-          <TableCell className="text-zinc-400">{formatCurrency(run.cost)}</TableCell>
+          <TableCell className="hidden text-zinc-400 sm:table-cell">{formatSeconds(run.elapsedSeconds)}</TableCell>
+          <TableCell className="hidden text-zinc-400 sm:table-cell">{formatCurrency(run.cost)}</TableCell>
         </TableRow>
       ))}
 

@@ -156,8 +156,8 @@ export function DayDetailModal({
           {sorted.length === 0 ? (
             <p className="py-8 text-center text-sm text-zinc-500">No tickets on this day.</p>
           ) : (
-            <div className="max-h-[60vh] overflow-y-auto">
-              <table className="w-full border-collapse text-left text-xs">
+            <div className="max-h-[60vh] overflow-x-auto overflow-y-auto">
+              <table className="w-full min-w-[760px] border-collapse text-left text-xs">
                 <thead className="sticky top-0 z-10 bg-card">
                   <tr className="border-b border-border text-[10px] uppercase tracking-wide text-zinc-500">
                     <th className="px-2 py-2 font-medium">Time</th>

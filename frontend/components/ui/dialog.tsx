@@ -34,7 +34,9 @@ const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
     <div
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-border bg-card p-6 text-zinc-200 sm:rounded-lg",
+        // w-[95vw] + max-h + internal scroll so the modal never exceeds a phone
+        // viewport; auto-content scrolls vertically inside the fixed shell.
+        "fixed left-1/2 top-1/2 z-50 grid max-h-[90vh] w-[95vw] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-lg border border-border bg-card p-4 text-zinc-200 sm:p-6",
         className
       )}
       {...props}

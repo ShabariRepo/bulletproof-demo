@@ -10,10 +10,10 @@ export function Sidebar({ className }: { className?: string }) {
   );
 }
 
-export function SidebarInner() {
+export function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
-      <Link href="/" className="mb-10 block">
+      <Link href="/" onClick={onNavigate} className="mb-10 block">
         <div className="text-xl font-semibold tracking-normal text-zinc-50">Silver Bullet</div>
         <div className="mt-1 text-xs uppercase tracking-[0.18em] text-zinc-500">Bulletproof Tier 1</div>
       </Link>
@@ -22,6 +22,7 @@ export function SidebarInner() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
           >
             <item.icon className="h-4 w-4" />

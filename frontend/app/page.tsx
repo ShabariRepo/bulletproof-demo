@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatSeconds, getDashboardMetrics, getTicketViews } from "@/lib/demo-data";
 import { readLiveRuns } from "@/lib/live-runs";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -85,7 +86,7 @@ export default function DashboardPage() {
       <DashboardCharts categoryCounts={metrics.categoryCounts} costOverTime={metrics.costOverTime} />
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <CardTitle>Ticket Queue</CardTitle>
             {totalRunCount > RECENT_LIMIT && (
@@ -105,11 +106,11 @@ export default function DashboardPage() {
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Subject</TableHead>
-                <TableHead>Assigned Specialist</TableHead>
+                <TableHead className="hidden md:table-cell">Assigned Specialist</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Quality</TableHead>
-                <TableHead>Latency</TableHead>
-                <TableHead>Cost</TableHead>
+                <TableHead className="hidden lg:table-cell">Quality</TableHead>
+                <TableHead className="hidden sm:table-cell">Latency</TableHead>
+                <TableHead className="hidden sm:table-cell">Cost</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -121,16 +122,16 @@ export default function DashboardPage() {
                       {view.ticket.id}
                     </Link>
                   </TableCell>
-                  <TableCell className="min-w-72 text-zinc-300">{view.ticket.subject}</TableCell>
-                  <TableCell className="text-zinc-400">{view.assignedSpecialist}</TableCell>
+                  <TableCell className="text-zinc-300 sm:min-w-72">{view.ticket.subject}</TableCell>
+                  <TableCell className="hidden text-zinc-400 md:table-cell">{view.assignedSpecialist}</TableCell>
                   <TableCell>
                     <StatusBadge status={view.status} />
                   </TableCell>
-                  <TableCell className={view.result?.resolution_quality_correct ? "text-emerald-300" : "text-red-300"}>
+                  <TableCell className={cn("hidden lg:table-cell", view.result?.resolution_quality_correct ? "text-emerald-300" : "text-red-300")}>
                     {view.result?.resolution_quality_correct ? "Pass" : "Review"}
                   </TableCell>
-                  <TableCell className="text-zinc-400">{formatSeconds(view.latencySeconds)}</TableCell>
-                  <TableCell className="text-zinc-400">{formatCurrency(view.cost)}</TableCell>
+                  <TableCell className="hidden text-zinc-400 sm:table-cell">{formatSeconds(view.latencySeconds)}</TableCell>
+                  <TableCell className="hidden text-zinc-400 sm:table-cell">{formatCurrency(view.cost)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

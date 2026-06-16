@@ -30,8 +30,8 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
           <Card>
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <Badge variant="outline">{view.ticket.id}</Badge>
                     <StatusBadge status={view.status} />
                     <Badge variant="outline">{view.priority}</Badge>
@@ -39,7 +39,7 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
                       {view.result?.resolution_quality_correct ? "Quality pass" : "Quality review"}
                     </Badge>
                   </div>
-                  <CardTitle className="mt-4 text-2xl">{view.ticket.subject}</CardTitle>
+                  <CardTitle className="mt-4 text-xl sm:text-2xl">{view.ticket.subject}</CardTitle>
                 </div>
                 <div className="text-right text-sm text-zinc-500">
                   <div>{formatSeconds(view.latencySeconds)}</div>
@@ -87,7 +87,7 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
               ) : null}
               <div>
                 <div className="text-sm font-medium text-zinc-100">Original ticket</div>
-                <pre className="mt-3 whitespace-pre-wrap rounded-lg border border-border bg-zinc-950 p-4 text-sm leading-6 text-zinc-400">
+                <pre className="mt-3 whitespace-pre-wrap break-words rounded-lg border border-border bg-zinc-950 p-4 text-sm leading-6 text-zinc-400">
                   {view.ticket.body}
                 </pre>
               </div>
@@ -122,7 +122,7 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
           <CardTitle>Halo Close-out Preview</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="whitespace-pre-wrap rounded-lg border border-border bg-zinc-950 p-5 text-sm leading-6 text-zinc-300">
+          <pre className="whitespace-pre-wrap break-words rounded-lg border border-border bg-zinc-950 p-5 text-sm leading-6 text-zinc-300">
             {view.closeOutPreview}
           </pre>
         </CardContent>

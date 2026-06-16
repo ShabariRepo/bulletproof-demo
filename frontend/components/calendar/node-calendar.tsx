@@ -149,13 +149,13 @@ export function NodeCalendar({
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Calendar grid */}
         <Card>
-          <CardContent className="p-6">
-            <div className="mb-3 grid grid-cols-7 gap-2 text-center text-[11px] font-medium uppercase tracking-wide text-zinc-600">
+          <CardContent className="p-3 sm:p-6">
+            <div className="mb-3 grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wide text-zinc-600 sm:gap-2 sm:text-[11px]">
               {WEEKDAYS.map((w) => (
                 <div key={w}>{w}</div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {cells.map((cell, idx) => {
                 if (!cell) return <div key={`pad-${idx}`} />;
                 const b = cell.bucket;
@@ -281,7 +281,7 @@ function DayNode({
       {/* day number */}
       <span
         className={cn(
-          "absolute left-1.5 top-1 text-[10px] tabular-nums",
+          "absolute left-1 top-0.5 text-[9px] tabular-nums sm:left-1.5 sm:top-1 sm:text-[10px]",
           hasData ? "text-zinc-400" : "text-zinc-700"
         )}
       >
@@ -289,7 +289,7 @@ function DayNode({
       </span>
       {/* count */}
       {hasData && (
-        <span className="relative z-10 text-sm font-semibold tabular-nums text-zinc-50">{total}</span>
+        <span className="relative z-10 text-xs font-semibold tabular-nums text-zinc-50 sm:text-sm">{total}</span>
       )}
       {/* escalation marker */}
       {escalations > 0 && (

@@ -45,8 +45,8 @@ export function KnowledgeBaseExplorer({ knowledgeBases }: { knowledgeBases: Know
             <h2 className="mt-2 text-2xl font-semibold tracking-normal text-zinc-50">{active.title}</h2>
           </div>
           <ScrollArea className="h-[42rem]">
-            <div className="markdown p-6">
-              <pre className="whitespace-pre-wrap text-sm leading-6 text-zinc-300">{active.markdown}</pre>
+            <div className="markdown p-4 sm:p-6">
+              <pre className="whitespace-pre-wrap break-words text-sm leading-6 text-zinc-300">{active.markdown}</pre>
             </div>
           </ScrollArea>
         </CardContent>
