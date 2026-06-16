@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/tickets/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { liveRunToModal } from "@/lib/run-rows";
-import { formatCurrency, formatSeconds } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatSeconds } from "@/lib/format";
 import type { LiveRun } from "@/lib/live-runs";
 
 const specialistDisplay: Record<string, string> = {
@@ -43,7 +43,7 @@ export function RecentRuns({ runs }: { runs: LiveRun[] }) {
                 LIVE
               </Badge>
             </div>
-            <div className="mt-1 text-[11px] text-zinc-500">{new Date(run.timestamp).toLocaleString()}</div>
+            <div className="mt-1 text-[11px] text-zinc-500">{formatDateTime(run.timestamp)}</div>
           </TableCell>
           <TableCell className="min-w-72 text-zinc-300">{run.subject}</TableCell>
           <TableCell className="text-zinc-400">{specialistDisplay[run.routing] ?? run.routing}</TableCell>

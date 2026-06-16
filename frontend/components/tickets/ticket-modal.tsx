@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/tickets/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { DialogContent, DialogHeader, DialogOverlay, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency, formatSeconds } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatSeconds } from "@/lib/format";
 import type { TicketStatus } from "@/types/demo";
 
 const specialistDisplay: Record<string, string> = {
@@ -160,7 +160,7 @@ export function TicketModal({ run, onClose }: { run: ModalRun | null; onClose: (
 
         {run.dateISO && (
           <div className="text-[11px] text-zinc-500">
-            Run recorded {new Date(run.dateISO).toLocaleString()}
+            Run recorded {formatDateTime(run.dateISO)}
           </div>
         )}
 

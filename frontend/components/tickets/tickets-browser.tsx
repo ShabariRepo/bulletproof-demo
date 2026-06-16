@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { ModalRun, RunSource } from "@/components/tickets/ticket-modal";
 import type { TicketRow } from "@/lib/run-rows";
 
@@ -216,7 +216,7 @@ export function TicketsBrowser({ rows }: { rows: TicketRow[] }) {
                   </TableCell>
                   <TableCell className="text-zinc-400">{formatCurrency(row.cost)}</TableCell>
                   <TableCell className="text-zinc-500">
-                    {row.dateISO ? new Date(row.dateISO).toLocaleDateString() : "—"}
+                    {row.dateISO ? formatDate(row.dateISO) : "—"}
                   </TableCell>
                 </TableRow>
               );

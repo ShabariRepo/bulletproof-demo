@@ -62,7 +62,8 @@ export default function DashboardPage() {
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-primary">Bulletproof MSP operations</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-normal text-zinc-50">Tier 1 queue overview</h2>
           <p className="mt-3 text-base leading-7 text-zinc-500">
-            Silver Bullet demo queue with local run history, live-run controls, webhook ingest paths, and integration settings.
+            Live agent runs against Bonito — triage, KB-grounded resolution, autoscaling, and escalation —
+            shown alongside a 30-day sample history for volume context.
           </p>
         </div>
       </section>
