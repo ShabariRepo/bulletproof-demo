@@ -165,6 +165,10 @@ export async function GET(request: Request) {
       // ----- Autoscaler state poller (runs alongside the burst) --------------
       let pollerActive = true;
       let peakRpm = 0;
+      // The /scaling/events endpoint returns the last 10 events EVER, so we must
+      // ignore any that predate this burst (otherwise stale scale-ups from an
+      // earlier run leak into burst_complete). 5s buffer for clock skew.
+      const burstStartMs = Date.now();
       const seenEventKeys = new Set<string>();
       const scaleEvents: { type: string; from: number; to: number; util: number; at: string }[] = [];
 
@@ -202,6 +206,8 @@ export async function GET(request: Request) {
               const e = await eventsResp.value.json().catch(() => ({}));
               const events = Array.isArray(e.events) ? e.events : [];
               for (const ev of events) {
+                // Skip scale events from before this burst started.
+                if (ev.created_at && new Date(ev.created_at).getTime() < burstStartMs - 5000) continue;
                 const key = `${ev.event_type}:${ev.previous_capacity}:${ev.new_capacity}:${ev.created_at}`;
                 if (seenEventKeys.has(key)) continue;
                 seenEventKeys.add(key);
@@ -238,7 +244,10 @@ export async function GET(request: Request) {
         const started = Date.now();
 
         const abort = new AbortController();
-        const timeout = setTimeout(() => abort.abort(), 150_000);
+        // 220s (< the route maxDuration of 240s) — long enough for a queued
+        // ticket to wait out the drainer (batch 3 / 2s, each a real 20-60s LLM
+        // call) instead of being falsely marked "dropped" on a short timeout.
+        const timeout = setTimeout(() => abort.abort(), 220_000);
 
         try {
           const resp = await fetch(`${baseUrl}/api/agents/${triageId}/execute`, {
@@ -298,16 +307,45 @@ export async function GET(request: Request) {
       let totalCost = 0;
       let totalTokens = 0;
 
-      const ticketPromises = Array.from({ length: count }, (_, idx) => {
-        const ticket = generateRandomTicket();
-        // Stagger fire slightly so the swarm lights up in sequence (not a
-        // visual jump) — still effectively concurrent against the agent.
-        return (async () => {
-          await pause(idx * 120);
-          send("ticket_fired", { idx, ticketLabel: ticket.id, category: ticket.category });
+      // Intake queue — the whole storm is accepted instantly, then a metered
+      // worker pool feeds Bonito at a bounded concurrency so we never hit the
+      // upstream with N truly-simultaneous heavy multi-agent calls (which is what
+      // was causing sporadic upstream timeouts read as "drops"). Bonito's own
+      // autoscaler + overflow queue stay the backstop for load beyond this rate.
+      const CONCURRENCY = Math.min(6, count);
+      const tickets = Array.from({ length: count }, () => generateRandomTicket());
+      let started = 0;
+      let finished = 0;
+      let nextIdx = 0;
+      const emitIntake = () =>
+        send("intake", {
+          received: count,
+          pending: count - started,
+          inFlight: started - finished,
+          done: finished,
+          concurrency: CONCURRENCY
+        });
+      emitIntake();
 
+      async function processTicket(idx: number, ticket: SimTicket) {
+        send("ticket_fired", { idx, ticketLabel: ticket.id, category: ticket.category });
+
+        {
           try {
-            const outcome = await runTicket(idx, ticket);
+            // Client-side retry: a transient upstream timeout/5xx (the request
+            // DID reach Bonito — the LLM-backed turn just timed out under load)
+            // gets up to 2 retries with backoff before we count it dropped.
+            let outcome: Awaited<ReturnType<typeof runTicket>> = null;
+            for (let attempt = 1; attempt <= 3; attempt++) {
+              try {
+                outcome = await runTicket(idx, ticket);
+                break;
+              } catch (retryErr) {
+                if (attempt >= 3) throw retryErr;
+                send("ticket_retry", { idx, attempt });
+                await pause(1200 * attempt);
+              }
+            }
             if (!outcome) {
               dropped += 1;
               send("ticket_done", {
@@ -399,10 +437,22 @@ export async function GET(request: Request) {
               error: true
             });
           }
-        })();
-      });
+        }
+      }
 
-      await Promise.allSettled(ticketPromises);
+      async function worker() {
+        while (true) {
+          const idx = nextIdx++;
+          if (idx >= count) return;
+          started += 1;
+          emitIntake();
+          await processTicket(idx, tickets[idx]);
+          finished += 1;
+          emitIntake();
+        }
+      }
+
+      await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
 
       // Let the poller emit one final state snapshot (queue drains, scale-down).
       await pause(1800);

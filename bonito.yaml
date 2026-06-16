@@ -89,9 +89,9 @@ agents:
     # autoscales (virtual: doubles effective RPM in Redis when utilization
     # crosses the threshold, up to base*max_replicas) and queues any overflow
     # instead of dropping it. base rate_limit_rpm is set low here so a modest
-    # demo burst visibly trips the ceiling (3 -> 6 -> 9) and exercises the queue.
+    # demo burst visibly trips the ceiling (5 -> 10 -> 15) and exercises the queue.
     # Applied live via PATCH /api/agents/{id} (provisioning passthrough is a TODO).
-    rate_limit_rpm: 3
+    rate_limit_rpm: 5
     autoscale_enabled: true
     autoscale_config:
       capacity_threshold: 0.5
