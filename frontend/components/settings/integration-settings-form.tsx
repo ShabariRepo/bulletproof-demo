@@ -129,8 +129,7 @@ export function IntegrationSettingsForm() {
                       </select>
                     </label>
                     <Field label="Base URL" value={settings.bonito.baseUrl} onChange={(value) => update("bonito", "baseUrl", value)} />
-                    <Field label="Email" value={settings.bonito.email} onChange={(value) => update("bonito", "email", value)} />
-                    <Field label="Password" type="password" value={settings.bonito.password} onChange={(value) => update("bonito", "password", value)} />
+                    <Field label="Scoped bp-* token" type="password" value={settings.bonito.apiToken} onChange={(value) => update("bonito", "apiToken", value)} />
                     <Field label="Triage router agent ID" value={settings.bonito.triageAgentId} onChange={(value) => update("bonito", "triageAgentId", value)} />
                   </div>
                 ) : null}

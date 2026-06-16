@@ -1,8 +1,7 @@
 export type BonitoSettings = {
   mode: "mock" | "live";
   baseUrl: string;
-  email: string;
-  password: string;
+  apiToken: string;
   triageAgentId: string;
 };
 

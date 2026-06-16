@@ -12,20 +12,9 @@ type RunRequest = {
 
 async function runBonitoLive(ticket: DemoTicket, settings: IntegrationSettings) {
   const baseUrl = settings.bonito.baseUrl.replace(/\/$/, "");
-  const login = await fetch(`${baseUrl}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: settings.bonito.email, password: settings.bonito.password })
-  });
-
-  if (!login.ok) {
-    throw new Error(`Bonito login failed (${login.status})`);
-  }
-
-  const tokenPayload = await login.json();
-  const token = tokenPayload.access_token ?? tokenPayload.token;
-  if (!token) {
-    throw new Error("Bonito login did not return a token");
+  const token = settings.bonito.apiToken;
+  if (!token.startsWith("bp-")) {
+    throw new Error("Live mode requires a scoped bp-* Bonito token.");
   }
 
   const execute = await fetch(`${baseUrl}/api/agents/${settings.bonito.triageAgentId}/execute`, {
@@ -58,8 +47,7 @@ export async function POST(request: Request) {
   if (
     settings.bonito.mode === "live" &&
     settings.bonito.baseUrl &&
-    settings.bonito.email &&
-    settings.bonito.password &&
+    settings.bonito.apiToken &&
     settings.bonito.triageAgentId
   ) {
     try {

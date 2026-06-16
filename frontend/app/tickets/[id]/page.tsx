@@ -35,6 +35,9 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
                     <Badge variant="outline">{view.ticket.id}</Badge>
                     <StatusBadge status={view.status} />
                     <Badge variant="outline">{view.priority}</Badge>
+                    <Badge variant={view.result?.resolution_quality_correct ? "resolved" : "escalated"}>
+                      {view.result?.resolution_quality_correct ? "Quality pass" : "Quality review"}
+                    </Badge>
                   </div>
                   <CardTitle className="mt-4 text-2xl">{view.ticket.subject}</CardTitle>
                 </div>
@@ -69,6 +72,19 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
                 </div>
               </div>
               <Separator className="my-6" />
+              {view.result?.resolution_failures?.length ? (
+                <>
+                  <div>
+                    <div className="text-sm font-medium text-red-300">Resolution-quality findings</div>
+                    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-red-200">
+                      {view.result.resolution_failures.map((failure) => (
+                        <li key={failure}>{failure}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Separator className="my-6" />
+                </>
+              ) : null}
               <div>
                 <div className="text-sm font-medium text-zinc-100">Original ticket</div>
                 <pre className="mt-3 whitespace-pre-wrap rounded-lg border border-border bg-zinc-950 p-4 text-sm leading-6 text-zinc-400">

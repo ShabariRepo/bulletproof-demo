@@ -16,6 +16,9 @@ export type RunResult = {
   expected_routing: string;
   actual_routing: string;
   routing_correct: boolean;
+  triage_correct?: boolean;
+  resolution_quality_correct?: boolean;
+  resolution_failures?: string[];
   severity?: string;
   confidence?: number;
   classification?: string;
@@ -100,7 +103,8 @@ export type TicketView = {
 
 export type DashboardMetrics = {
   totalTickets: number;
-  resolvedByAiPct: number;
+  triageCorrectPct: number;
+  resolutionQualityPct: number;
   avgHandleSeconds: number;
   totalCost: number;
   avgCostPerTicket: number;

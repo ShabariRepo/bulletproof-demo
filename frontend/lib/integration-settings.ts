@@ -6,8 +6,7 @@ export const defaultIntegrationSettings: IntegrationSettings = {
   bonito: {
     mode: "mock",
     baseUrl: "https://api.getbonito.com",
-    email: "",
-    password: "",
+    apiToken: "",
     triageAgentId: "98c6d000"
   },
   halo: {

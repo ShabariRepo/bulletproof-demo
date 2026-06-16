@@ -333,7 +333,8 @@ export const getTicketViews = cache((): TicketView[] => {
 export const getDashboardMetrics = cache((): DashboardMetrics => {
   const views = getTicketViews();
   const totalTickets = views.length;
-  const resolved = views.filter((view) => view.status === "resolved").length;
+  const triageCorrect = views.filter((view) => view.result?.triage_correct ?? view.result?.routing_correct).length;
+  const resolutionCorrect = views.filter((view) => view.result?.resolution_quality_correct).length;
   const totalCost = views.reduce((sum, view) => sum + view.cost, 0);
   const totalLatency = views.reduce((sum, view) => sum + view.latencySeconds, 0);
   const categoryMap = new Map<string, number>();
@@ -343,7 +344,8 @@ export const getDashboardMetrics = cache((): DashboardMetrics => {
   });
   return {
     totalTickets,
-    resolvedByAiPct: totalTickets ? Math.round((resolved / totalTickets) * 100) : 0,
+    triageCorrectPct: totalTickets ? Math.round((triageCorrect / totalTickets) * 100) : 0,
+    resolutionQualityPct: totalTickets ? Math.round((resolutionCorrect / totalTickets) * 100) : 0,
     avgHandleSeconds: totalTickets ? totalLatency / totalTickets : 0,
     totalCost,
     avgCostPerTicket: totalTickets ? totalCost / totalTickets : 0,
