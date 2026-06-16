@@ -108,10 +108,11 @@ export function DashboardCharts({
         </CardHeader>
         <CardContent>
           <div className="mb-1 text-2xl font-semibold tracking-normal text-emerald-300">
-            {moneyShort(savedTotal)} saved
+            {moneyShort(savedTotal)} CAD saved
           </div>
           <div className="mb-4 text-[11px] leading-5 text-zinc-500">
-            Assumes ~$7/ticket fully-loaded human Tier-1 (conservative).
+            $27 CAD/ticket on auto-resolved tickets — conservative vs MetricNet&apos;s 2024 Tier-1
+            benchmark of ~$22 USD (~$30 CAD).
           </div>
           {costSavedByDay.length === 0 ? (
             <div className="flex h-[180px] items-center justify-center text-sm text-zinc-600">

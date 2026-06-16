@@ -52,7 +52,9 @@ export default function DashboardPage() {
   // A human-only desk would pay this per Tier-1 ticket; we only count savings on
   // AUTO-RESOLVED tickets (resolved AND not escalated) — escalations still
   // needed a human, so they save no labor (consistent with "Est. labor saved").
-  const HUMAN_COST_PER_TICKET = 7;
+  // $27 CAD/ticket (~$20 USD): near the top of the realistic range and just under
+  // MetricNet's 2024 Tier-1 benchmark of ~$22 USD (~$30 CAD). Account is Canadian.
+  const HUMAN_COST_PER_TICKET = 27;
 
   // Per-day aggregates from the stored runs (canonical 10 carry no timestamp).
   type DayAgg = { date: string; count: number; autoResolved: number; secs: number };
