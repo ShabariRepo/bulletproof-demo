@@ -21,7 +21,10 @@ const specialistDisplay: Record<string, string> = {
 export default function DashboardPage() {
   const metrics = getDashboardMetrics();
   const tickets = getTicketViews();
-  const liveRuns = readLiveRuns().slice().reverse();
+  const allLiveRuns = readLiveRuns();
+  const totalRunCount = allLiveRuns.length;
+  const RECENT_LIMIT = 15;
+  const liveRuns = allLiveRuns.slice(-RECENT_LIMIT).reverse();
   const kpis = [
     { label: "Total tickets", value: metrics.totalTickets.toString(), icon: Ticket },
     { label: "Triage correctness", value: `${metrics.triageCorrectPct}%`, icon: Gauge },
@@ -60,7 +63,14 @@ export default function DashboardPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Ticket Queue</CardTitle>
+          <div className="flex items-center gap-3">
+            <CardTitle>Ticket Queue</CardTitle>
+            {totalRunCount > RECENT_LIMIT && (
+              <span className="text-xs text-zinc-500">
+                showing {liveRuns.length} of {totalRunCount} runs
+              </span>
+            )}
+          </div>
           <Link href="/simulate" className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80">
             Run a live ticket
             <ArrowUpRight className="h-4 w-4" />

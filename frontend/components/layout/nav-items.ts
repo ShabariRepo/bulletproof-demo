@@ -1,4 +1,4 @@
-import { Activity, BookOpen, Cable, LayoutDashboard, Settings, Ticket } from "lucide-react";
+import { Activity, BookOpen, Cable, CalendarDays, LayoutDashboard, Settings, Ticket } from "lucide-react";
 
 export const navItems = [
   {
@@ -10,6 +10,11 @@ export const navItems = [
     href: "/simulate",
     label: "Live Sim",
     icon: Activity
+  },
+  {
+    href: "/calendar",
+    label: "Calendar",
+    icon: CalendarDays
   },
   {
     href: "/tickets/BP-001",

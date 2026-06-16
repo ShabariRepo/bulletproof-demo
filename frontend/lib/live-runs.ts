@@ -53,3 +53,52 @@ export function appendLiveRun(run: LiveRun): LiveRun[] {
   }
   return runs;
 }
+
+// ---- Calendar aggregation -------------------------------------------------
+// One bucket per calendar day (local date), with the counts the node-calendar
+// needs to render "busy vs quiet" days and a per-day breakdown.
+
+export type DayBucket = {
+  date: string; // YYYY-MM-DD (local)
+  total: number;
+  escalations: number;
+  misroutes: number;
+  resolved: number;
+  byCategory: Record<string, number>;
+  cost: number;
+};
+
+function localDateKey(iso: string): string {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Group all stored runs by local calendar day. */
+export function readRunsByDay(): Record<string, DayBucket> {
+  const buckets: Record<string, DayBucket> = {};
+  for (const r of readLiveRuns()) {
+    if (!r.timestamp) continue;
+    const key = localDateKey(r.timestamp);
+    const b =
+      buckets[key] ??
+      (buckets[key] = {
+        date: key,
+        total: 0,
+        escalations: 0,
+        misroutes: 0,
+        resolved: 0,
+        byCategory: {},
+        cost: 0,
+      });
+    b.total += 1;
+    if ((r.routing || "").toUpperCase() === "ESCALATION") b.escalations += 1;
+    if (!r.triageCorrect) b.misroutes += 1;
+    if (r.resolved) b.resolved += 1;
+    b.byCategory[r.category] = (b.byCategory[r.category] ?? 0) + 1;
+    b.cost += Number(r.cost) || 0;
+  }
+  return buckets;
+}
