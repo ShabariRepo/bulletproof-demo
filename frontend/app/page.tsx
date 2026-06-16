@@ -25,12 +25,37 @@ export default function DashboardPage() {
   const totalRunCount = allLiveRuns.length;
   const RECENT_LIMIT = 15;
   const liveRuns = allLiveRuns.slice(-RECENT_LIMIT).reverse();
+
+  // KPIs span the FULL handled history — the canonical demo tickets plus every
+  // stored run (live, burst, seeded). Recover the canonical counts from the
+  // aggregated percentages (exact for the 10-ticket set) and fold in the store
+  // so the cards stay consistent with the queue + calendar.
+  const canonN = metrics.totalTickets;
+  const canonTriage = Math.round((metrics.triageCorrectPct / 100) * canonN);
+  const canonResolved = Math.round((metrics.resolutionQualityPct / 100) * canonN);
+  const live = allLiveRuns.reduce(
+    (a, r) => ({
+      n: a.n + 1,
+      triage: a.triage + (r.triageCorrect ? 1 : 0),
+      resolved: a.resolved + (r.resolved ? 1 : 0),
+      secs: a.secs + (Number(r.elapsedSeconds) || 0),
+      cost: a.cost + (Number(r.cost) || 0)
+    }),
+    { n: 0, triage: 0, resolved: 0, secs: 0, cost: 0 }
+  );
+  const totalN = canonN + live.n;
+  const pct = (num: number) => (totalN ? Math.round((num / totalN) * 100) : 0);
+  const triagePct = pct(canonTriage + live.triage);
+  const resolutionPct = pct(canonResolved + live.resolved);
+  const avgSecs = totalN ? (metrics.avgHandleSeconds * canonN + live.secs) / totalN : 0;
+  const totalCost = metrics.totalCost + live.cost;
+
   const kpis = [
-    { label: "Total tickets", value: metrics.totalTickets.toString(), icon: Ticket },
-    { label: "Triage correctness", value: `${metrics.triageCorrectPct}%`, icon: Gauge },
-    { label: "Resolution quality", value: `${metrics.resolutionQualityPct}%`, icon: Gauge },
-    { label: "Avg handle time", value: formatSeconds(metrics.avgHandleSeconds), icon: Clock },
-    { label: "Total cost", value: formatCurrency(metrics.totalCost), icon: Coins }
+    { label: "Total tickets", value: totalN.toLocaleString(), icon: Ticket },
+    { label: "Triage correctness", value: `${triagePct}%`, icon: Gauge },
+    { label: "Resolution quality", value: `${resolutionPct}%`, icon: Gauge },
+    { label: "Avg handle time", value: formatSeconds(avgSecs), icon: Clock },
+    { label: "Total cost", value: formatCurrency(totalCost), icon: Coins }
   ];
 
   return (
