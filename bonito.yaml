@@ -84,6 +84,22 @@ agents:
       mode: allowlist
       allowed: [invoke_agent, search_knowledge_base]
 
+    # Agent HPA + overflow queue (Enterprise+). The MSP ticket flow is bursty —
+    # N-able / Sentinel can fire many alerts at once — so the triage front door
+    # autoscales (virtual: doubles effective RPM in Redis when utilization
+    # crosses the threshold, up to base*max_replicas) and queues any overflow
+    # instead of dropping it. base rate_limit_rpm is set low here so a modest
+    # demo burst visibly trips the ceiling (3 -> 6 -> 9) and exercises the queue.
+    # Applied live via PATCH /api/agents/{id} (provisioning passthrough is a TODO).
+    rate_limit_rpm: 3
+    autoscale_enabled: true
+    autoscale_config:
+      capacity_threshold: 0.5
+      scale_down_threshold: 0.2
+      scale_down_cooldown_seconds: 600
+      max_replicas: 3
+      mode: virtual
+
     delegates:
       - agent: password-specialist
         connection_type: handoff
