@@ -166,6 +166,13 @@ export async function GET(request: Request) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ stage, ...payload })}\n\n`));
       };
 
+      // Defeat byte-threshold buffering. Mobile carriers / some proxies hold
+      // small SSE chunks until ~2-4KB accumulates (or the stream closes), then
+      // dump them all at once — which on a phone looks like "nothing, then every
+      // step turns green at the end." A big initial comment line (`:` is ignored
+      // by EventSource) blows past that threshold so each event flushes live.
+      controller.enqueue(encoder.encode(`:${" ".repeat(4096)}\n\n`));
+
       // Cosmetic pause between post-result reveal stages (real data, paced UI).
       const REVEAL_PAUSE = 700;
 
@@ -192,6 +199,17 @@ export async function GET(request: Request) {
         // 2) triage_start — the real triage router is engaged.
         send("triage_start", { message: "Triage Router engaged — classifying and routing…" });
 
+        // Heartbeat during the long (20–70s) blocking triage call so mobile
+        // connections / proxies don't idle-buffer the stream (`:` comments are
+        // ignored by EventSource). Cleared once the call returns.
+        const keepalive = setInterval(() => {
+          try {
+            controller.enqueue(encoder.encode(`: keepalive\n\n`));
+          } catch {
+            /* controller already closed */
+          }
+        }, 4000);
+
         // 3) await the REAL execute call (20–70s; triage + specialist delegation).
         const message = `NEW SUPPORT TICKET [${ticket.id}]\nSubject: ${ticket.subject}\n\n${ticket.body}`;
         const started = Date.now();
@@ -217,6 +235,7 @@ export async function GET(request: Request) {
           data = await resp.json();
         } finally {
           clearTimeout(timeout);
+          clearInterval(keepalive);
         }
 
         const elapsedSeconds = Math.round(((Date.now() - started) / 1000) * 10) / 10;
